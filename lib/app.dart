@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'features/home/view/home_screen.dart';
 import 'features/tag_management/view/tag_screen.dart';
 import 'features/medicine_registration/view/registration_screen.dart';
@@ -14,20 +15,17 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "의약품 관리 시스템",
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.teal,
         scaffoldBackgroundColor: Colors.white,
+        fontFamily: GoogleFonts.poppins().fontFamily,
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
-          elevation: 0,
-          titleTextStyle: TextStyle(color: Colors.black, fontSize: 20),
-          iconTheme: IconThemeData(color: Colors.black),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          titleTextStyle: TextStyle(
+            color: Colors.teal[600],
+            fontSize: 22,
+            fontWeight: FontWeight.w500,
           ),
+          // iconTheme: IconThemeData(color: Colors.teal[700]),
         ),
       ),
       initialRoute: '/',
