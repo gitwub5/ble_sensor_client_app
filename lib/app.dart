@@ -17,7 +17,7 @@ class App extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
         scaffoldBackgroundColor: Colors.white,
-        fontFamily: GoogleFonts.poppins().fontFamily,
+        fontFamily: GoogleFonts.roboto().fontFamily,
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.white,
           titleTextStyle: TextStyle(
