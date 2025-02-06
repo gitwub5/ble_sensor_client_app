@@ -1,4 +1,6 @@
+import 'package:bluetooth_app/features/home/viewmodel/home_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'widgets/bluetooth_scan_bottomsheet.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -84,6 +86,8 @@ class HomeScreen extends StatelessWidget {
 
   /// 블루투스 스캔 바텀시트
   void _showBluetoothScanBottomSheet(BuildContext context) {
+    final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.purple[50],
@@ -94,6 +98,9 @@ class HomeScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return BluetoothScanBottomSheet();
       },
-    );
+    ).whenComplete(() {
+      homeViewModel.scanResults.clear();
+      homeViewModel.notifyListeners(); // UI 업데이트 반영
+    });
   }
 }
