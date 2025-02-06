@@ -17,20 +17,18 @@ class BluePlusService {
     });
   }
 
-  /// 블루투스 장치 검색
-  Future<List<fb.ScanResult>> scanDevices(
-      {Duration timeout = const Duration(seconds: 5)}) async {
+  /// 블루투스 장치 검색 (검색 시간 지정 가능)
+  Future<List<fb.ScanResult>> scanDevices({Duration? timeout}) async {
     if (await fb.FlutterBluePlus.adapterState.first !=
         fb.BluetoothAdapterState.on) {
       throw Exception("Bluetooth is not enabled.");
     }
+    final scanTimeout = timeout ?? const Duration(seconds: 5);
+    await fb.FlutterBluePlus.startScan(timeout: scanTimeout);
+    await Future.delayed(scanTimeout);
+    List<fb.ScanResult> results = await fb.FlutterBluePlus.scanResults.first;
 
-    // BLE 장치 검색 시작
-    await fb.FlutterBluePlus.startScan(timeout: timeout);
-
-    // 검색된 장치 목록 가져오기
-    await Future.delayed(timeout);
-    return fb.FlutterBluePlus.scanResults.first;
+    return results;
   }
 
   /// BLE 장치 연결
