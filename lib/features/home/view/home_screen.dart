@@ -16,11 +16,9 @@ class HomeScreen extends StatelessWidget {
               crossAxisSpacing: 30,
               children: [
                 _buildGridButton(context, "Tag 관리", "/tag"),
-                _buildGridButton(context, "의약품 등록", "/registration"),
-                _buildGridButton(context, "의약품 품질관리", "/quality"),
+                _buildGridButton(context, "냉장고 관리", "/fridge"),
                 _buildGridButton(context, "의약품 DB", "/database"),
-                _buildGridButton(context, "냉장고 정보", "/fridge"),
-                _buildGridButton(context, "입출고 관리", "/inventory"),
+                _buildGridButton(context, "의약품 입출고 관리", "/inventory"),
               ],
             ),
           ),

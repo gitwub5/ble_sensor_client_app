@@ -2,7 +2,6 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fb;
 import 'dart:async';
 
 class BluePlusService {
-  final fb.FlutterBluePlus _flutterBlue = fb.FlutterBluePlus();
   fb.BluetoothDevice? _connectedDevice;
   StreamSubscription<fb.BluetoothAdapterState>? _adapterStateSubscription;
 
