@@ -38,8 +38,35 @@ class TagViewModel extends ChangeNotifier {
   /// 블루투스 장치 검색
   Future<void> startScan() async {
     try {
+      scanResults.clear(); // ✅ 기존 검색 결과 초기화
+      notifyListeners();
+
       scanResults = await _bluePlusService.scanDevices();
       notifyListeners();
+
+      scanResults.forEach((result) {
+        String deviceName = result.device.platformName.isNotEmpty
+            ? result.device.platformName
+            : "Unknown Device";
+
+        print("🔍 Found Device: $deviceName (${result.device.remoteId})");
+
+        /// ✅ Manufacturer Data 확인
+        result.advertisementData.manufacturerData.forEach((key, value) {
+          print(
+              "🏭 Manufacturer ID: $key, Data: ${value.map((e) => e.toRadixString(16)).join(' ')}");
+        });
+
+        /// ✅ Service Data 확인
+        result.advertisementData.serviceData.forEach((key, value) {
+          print(
+              "🔧 Service UUID: $key, Data: ${value.map((e) => e.toRadixString(16)).join(' ')}");
+        });
+
+        /// ✅ Raw Advertisement 데이터 출력
+        print(
+            "📡 Raw Advertisement Data: ${result.advertisementData.toString()}");
+      });
     } catch (e) {
       print("❌ Bluetooth Scan Failed: $e");
     }
