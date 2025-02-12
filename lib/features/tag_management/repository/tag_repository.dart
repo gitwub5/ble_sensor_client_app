@@ -13,7 +13,7 @@ class TagRepository {
 
   Future<void> addTag(String uid, String name) async {
     final newTag = TagsCompanion(
-      uid: Value(uid),
+      remoteId: Value(uid),
       name: Value(name),
       sensorPeriod: Value("00:30:00"),
     );
