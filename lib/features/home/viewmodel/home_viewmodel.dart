@@ -1,38 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fb;
-import '../../../core/bluetooth/blueplus_service.dart';
+import 'package:bluetooth_app/core/bluetooth/bluetooth_manager.dart';
 
 class HomeViewModel extends ChangeNotifier {
-  final BluePlusService _bluePlusService = BluePlusService();
+  final BluetoothManager _bluetoothManager;
   List<fb.ScanResult> scanResults = [];
+  fb.BluetoothAdapterState _bluetoothState = fb.BluetoothAdapterState.unknown;
+  bool isScanning = false;
 
-  /// 블루투스 상태 모니터링
-  void monitorBluetoothState(Function(fb.BluetoothAdapterState) callback) {
-    _bluePlusService.monitorBluetoothState(callback);
+  HomeViewModel(this._bluetoothManager) {
+    // ✅ Bluetooth 상태 변화 감지하여 UI 업데이트
+    _bluetoothManager.stateService.setBluetoothStateListener((state) {
+      _bluetoothState = state;
+      notifyListeners(); // ✅ UI 업데이트
+    });
   }
 
-  /// 블루투스 장치 검색 (TODO: 등록해놓은 디바이스를 검색할 수 있게 수정)
+  /// ✅ 블루투스 현재 상태 가져오기
+  fb.BluetoothAdapterState get bluetoothState => _bluetoothState;
+
+  /// ✅ 블루투스 장치 검색 시작 (로딩 상태 추가)
   Future<void> startScan() async {
     try {
-      scanResults.clear(); // ✅ 기존 검색 결과 초기화
+      isScanning = true;
+      scanResults.clear();
       notifyListeners();
 
-      scanResults = await _bluePlusService.scanDevices();
+      scanResults = await _bluetoothManager.scanService.scanDevices();
+
+      isScanning = false;
       notifyListeners();
     } catch (e) {
+      isScanning = false;
+      notifyListeners();
       print("❌ Bluetooth Scan Failed: $e");
     }
-  }
-
-  /// 블루투스 장치 연결
-  Future<void> connectToDevice(fb.BluetoothDevice device) async {
-    await _bluePlusService.connectToDevice(device);
-    notifyListeners();
-  }
-
-  /// 블루투스 장치 연결 해제
-  Future<void> disconnectDevice() async {
-    await _bluePlusService.disconnectDevice();
-    notifyListeners();
   }
 }
