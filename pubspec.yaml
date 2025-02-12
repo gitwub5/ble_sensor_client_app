@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_blue_plus: ^1.35.2
+  flutter_native_splash: ^2.4.4
   google_fonts: ^6.2.1
   path: ^1.9.0
   path_provider: ^2.1.5
@@ -36,9 +37,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/images/splash_icon.png
 
   fonts:
     - family: Roboto
@@ -47,5 +47,12 @@ flutter:
         - asset: assets/fonts/Roboto-Light.ttf
         - asset: assets/fonts/Roboto-Bold.ttf
         - asset: assets/fonts/Roboto-Medium.ttf
+
+flutter_native_splash:
+  color: "#ffffff" # 배경색
+  image: assets/images/splash_icon.png # 앱 실행 시 표시할 이미지 
+  android: true
+  ios: false
+  fullscreen: true
         
        
