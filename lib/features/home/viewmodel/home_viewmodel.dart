@@ -14,6 +14,9 @@ class HomeViewModel extends ChangeNotifier {
   /// 블루투스 장치 검색 (TODO: 등록해놓은 디바이스를 검색할 수 있게 수정)
   Future<void> startScan() async {
     try {
+      scanResults.clear(); // ✅ 기존 검색 결과 초기화
+      notifyListeners();
+
       scanResults = await _bluePlusService.scanDevices();
       notifyListeners();
     } catch (e) {
