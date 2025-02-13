@@ -2,6 +2,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fb;
 import 'services/state_service.dart';
 import 'services/scan_service.dart';
 import 'services/connection_service.dart';
+import 'utils/ble_uuid.dart';
 
 class BluetoothManager {
   static BluetoothManager? _instance;
@@ -14,6 +15,7 @@ class BluetoothManager {
   final BluetoothStateService stateService;
   final BluetoothScanService scanService;
   final BluetoothConnectionService connectionService;
+  final BleUUID bleUUID = BleUUID();
 
   BluetoothManager._internal(this.stateService)
       : scanService = BluetoothScanService(stateService),
