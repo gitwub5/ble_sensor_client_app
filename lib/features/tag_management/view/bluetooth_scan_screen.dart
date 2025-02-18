@@ -36,7 +36,7 @@ class BluetoothScanScreen extends StatelessWidget {
                   subtitle: Text(device.remoteId.toString()),
                   trailing: ElevatedButton(
                     onPressed: () {
-                      tagViewModel.connectToDevice(device);
+                      // tagViewModel.connectToDevice(device);
                     },
                     child: Text("연결"),
                   ),

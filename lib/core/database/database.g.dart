@@ -239,21 +239,14 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _uidMeta = const VerificationMeta('uid');
+  static const VerificationMeta _remoteIdMeta =
+      const VerificationMeta('remoteId');
   @override
-  late final GeneratedColumn<String> uid = GeneratedColumn<String>(
-      'uid', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 32),
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+      'remote_id', aliasedName, true,
       type: DriftSqlType.string,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
-  static const VerificationMeta _deviceAddressMeta =
-      const VerificationMeta('deviceAddress');
-  @override
-  late final GeneratedColumn<String> deviceAddress = GeneratedColumn<String>(
-      'device_address', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -285,7 +278,7 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
           GeneratedColumn.constraintIsAlways('REFERENCES refrigerators (id)'));
   @override
   List<GeneratedColumn> get $columns =>
-      [id, uid, deviceAddress, name, sensorPeriod, lastUpdate, refrigeratorId];
+      [id, remoteId, name, sensorPeriod, lastUpdate, refrigeratorId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -299,17 +292,9 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('uid')) {
-      context.handle(
-          _uidMeta, uid.isAcceptableOrUnknown(data['uid']!, _uidMeta));
-    } else if (isInserting) {
-      context.missing(_uidMeta);
-    }
-    if (data.containsKey('device_address')) {
-      context.handle(
-          _deviceAddressMeta,
-          deviceAddress.isAcceptableOrUnknown(
-              data['device_address']!, _deviceAddressMeta));
+    if (data.containsKey('remote_id')) {
+      context.handle(_remoteIdMeta,
+          remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta));
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -348,10 +333,8 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
     return Tag(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      uid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}uid'])!,
-      deviceAddress: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}device_address']),
+      remoteId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}remote_id']),
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       sensorPeriod: attachedDatabase.typeMapping
@@ -371,16 +354,14 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
 
 class Tag extends DataClass implements Insertable<Tag> {
   final int id;
-  final String uid;
-  final String? deviceAddress;
+  final String? remoteId;
   final String name;
   final String sensorPeriod;
   final DateTime? lastUpdate;
   final int? refrigeratorId;
   const Tag(
       {required this.id,
-      required this.uid,
-      this.deviceAddress,
+      this.remoteId,
       required this.name,
       required this.sensorPeriod,
       this.lastUpdate,
@@ -389,9 +370,8 @@ class Tag extends DataClass implements Insertable<Tag> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['uid'] = Variable<String>(uid);
-    if (!nullToAbsent || deviceAddress != null) {
-      map['device_address'] = Variable<String>(deviceAddress);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<String>(remoteId);
     }
     map['name'] = Variable<String>(name);
     map['sensor_period'] = Variable<String>(sensorPeriod);
@@ -407,10 +387,9 @@ class Tag extends DataClass implements Insertable<Tag> {
   TagsCompanion toCompanion(bool nullToAbsent) {
     return TagsCompanion(
       id: Value(id),
-      uid: Value(uid),
-      deviceAddress: deviceAddress == null && nullToAbsent
+      remoteId: remoteId == null && nullToAbsent
           ? const Value.absent()
-          : Value(deviceAddress),
+          : Value(remoteId),
       name: Value(name),
       sensorPeriod: Value(sensorPeriod),
       lastUpdate: lastUpdate == null && nullToAbsent
@@ -427,8 +406,7 @@ class Tag extends DataClass implements Insertable<Tag> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Tag(
       id: serializer.fromJson<int>(json['id']),
-      uid: serializer.fromJson<String>(json['uid']),
-      deviceAddress: serializer.fromJson<String?>(json['deviceAddress']),
+      remoteId: serializer.fromJson<String?>(json['remoteId']),
       name: serializer.fromJson<String>(json['name']),
       sensorPeriod: serializer.fromJson<String>(json['sensorPeriod']),
       lastUpdate: serializer.fromJson<DateTime?>(json['lastUpdate']),
@@ -440,8 +418,7 @@ class Tag extends DataClass implements Insertable<Tag> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'uid': serializer.toJson<String>(uid),
-      'deviceAddress': serializer.toJson<String?>(deviceAddress),
+      'remoteId': serializer.toJson<String?>(remoteId),
       'name': serializer.toJson<String>(name),
       'sensorPeriod': serializer.toJson<String>(sensorPeriod),
       'lastUpdate': serializer.toJson<DateTime?>(lastUpdate),
@@ -451,17 +428,14 @@ class Tag extends DataClass implements Insertable<Tag> {
 
   Tag copyWith(
           {int? id,
-          String? uid,
-          Value<String?> deviceAddress = const Value.absent(),
+          Value<String?> remoteId = const Value.absent(),
           String? name,
           String? sensorPeriod,
           Value<DateTime?> lastUpdate = const Value.absent(),
           Value<int?> refrigeratorId = const Value.absent()}) =>
       Tag(
         id: id ?? this.id,
-        uid: uid ?? this.uid,
-        deviceAddress:
-            deviceAddress.present ? deviceAddress.value : this.deviceAddress,
+        remoteId: remoteId.present ? remoteId.value : this.remoteId,
         name: name ?? this.name,
         sensorPeriod: sensorPeriod ?? this.sensorPeriod,
         lastUpdate: lastUpdate.present ? lastUpdate.value : this.lastUpdate,
@@ -471,10 +445,7 @@ class Tag extends DataClass implements Insertable<Tag> {
   Tag copyWithCompanion(TagsCompanion data) {
     return Tag(
       id: data.id.present ? data.id.value : this.id,
-      uid: data.uid.present ? data.uid.value : this.uid,
-      deviceAddress: data.deviceAddress.present
-          ? data.deviceAddress.value
-          : this.deviceAddress,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       name: data.name.present ? data.name.value : this.name,
       sensorPeriod: data.sensorPeriod.present
           ? data.sensorPeriod.value
@@ -491,8 +462,7 @@ class Tag extends DataClass implements Insertable<Tag> {
   String toString() {
     return (StringBuffer('Tag(')
           ..write('id: $id, ')
-          ..write('uid: $uid, ')
-          ..write('deviceAddress: $deviceAddress, ')
+          ..write('remoteId: $remoteId, ')
           ..write('name: $name, ')
           ..write('sensorPeriod: $sensorPeriod, ')
           ..write('lastUpdate: $lastUpdate, ')
@@ -502,15 +472,14 @@ class Tag extends DataClass implements Insertable<Tag> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, uid, deviceAddress, name, sensorPeriod, lastUpdate, refrigeratorId);
+  int get hashCode =>
+      Object.hash(id, remoteId, name, sensorPeriod, lastUpdate, refrigeratorId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Tag &&
           other.id == this.id &&
-          other.uid == this.uid &&
-          other.deviceAddress == this.deviceAddress &&
+          other.remoteId == this.remoteId &&
           other.name == this.name &&
           other.sensorPeriod == this.sensorPeriod &&
           other.lastUpdate == this.lastUpdate &&
@@ -519,16 +488,14 @@ class Tag extends DataClass implements Insertable<Tag> {
 
 class TagsCompanion extends UpdateCompanion<Tag> {
   final Value<int> id;
-  final Value<String> uid;
-  final Value<String?> deviceAddress;
+  final Value<String?> remoteId;
   final Value<String> name;
   final Value<String> sensorPeriod;
   final Value<DateTime?> lastUpdate;
   final Value<int?> refrigeratorId;
   const TagsCompanion({
     this.id = const Value.absent(),
-    this.uid = const Value.absent(),
-    this.deviceAddress = const Value.absent(),
+    this.remoteId = const Value.absent(),
     this.name = const Value.absent(),
     this.sensorPeriod = const Value.absent(),
     this.lastUpdate = const Value.absent(),
@@ -536,19 +503,16 @@ class TagsCompanion extends UpdateCompanion<Tag> {
   });
   TagsCompanion.insert({
     this.id = const Value.absent(),
-    required String uid,
-    this.deviceAddress = const Value.absent(),
+    this.remoteId = const Value.absent(),
     required String name,
     required String sensorPeriod,
     this.lastUpdate = const Value.absent(),
     this.refrigeratorId = const Value.absent(),
-  })  : uid = Value(uid),
-        name = Value(name),
+  })  : name = Value(name),
         sensorPeriod = Value(sensorPeriod);
   static Insertable<Tag> custom({
     Expression<int>? id,
-    Expression<String>? uid,
-    Expression<String>? deviceAddress,
+    Expression<String>? remoteId,
     Expression<String>? name,
     Expression<String>? sensorPeriod,
     Expression<DateTime>? lastUpdate,
@@ -556,8 +520,7 @@ class TagsCompanion extends UpdateCompanion<Tag> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (uid != null) 'uid': uid,
-      if (deviceAddress != null) 'device_address': deviceAddress,
+      if (remoteId != null) 'remote_id': remoteId,
       if (name != null) 'name': name,
       if (sensorPeriod != null) 'sensor_period': sensorPeriod,
       if (lastUpdate != null) 'last_update': lastUpdate,
@@ -567,16 +530,14 @@ class TagsCompanion extends UpdateCompanion<Tag> {
 
   TagsCompanion copyWith(
       {Value<int>? id,
-      Value<String>? uid,
-      Value<String?>? deviceAddress,
+      Value<String?>? remoteId,
       Value<String>? name,
       Value<String>? sensorPeriod,
       Value<DateTime?>? lastUpdate,
       Value<int?>? refrigeratorId}) {
     return TagsCompanion(
       id: id ?? this.id,
-      uid: uid ?? this.uid,
-      deviceAddress: deviceAddress ?? this.deviceAddress,
+      remoteId: remoteId ?? this.remoteId,
       name: name ?? this.name,
       sensorPeriod: sensorPeriod ?? this.sensorPeriod,
       lastUpdate: lastUpdate ?? this.lastUpdate,
@@ -590,11 +551,8 @@ class TagsCompanion extends UpdateCompanion<Tag> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (uid.present) {
-      map['uid'] = Variable<String>(uid.value);
-    }
-    if (deviceAddress.present) {
-      map['device_address'] = Variable<String>(deviceAddress.value);
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -615,8 +573,7 @@ class TagsCompanion extends UpdateCompanion<Tag> {
   String toString() {
     return (StringBuffer('TagsCompanion(')
           ..write('id: $id, ')
-          ..write('uid: $uid, ')
-          ..write('deviceAddress: $deviceAddress, ')
+          ..write('remoteId: $remoteId, ')
           ..write('name: $name, ')
           ..write('sensorPeriod: $sensorPeriod, ')
           ..write('lastUpdate: $lastUpdate, ')
@@ -2138,8 +2095,7 @@ typedef $$RefrigeratorsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function({bool tagsRefs, bool medicinesRefs})>;
 typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
   Value<int> id,
-  required String uid,
-  Value<String?> deviceAddress,
+  Value<String?> remoteId,
   required String name,
   required String sensorPeriod,
   Value<DateTime?> lastUpdate,
@@ -2147,8 +2103,7 @@ typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
 });
 typedef $$TagsTableUpdateCompanionBuilder = TagsCompanion Function({
   Value<int> id,
-  Value<String> uid,
-  Value<String?> deviceAddress,
+  Value<String?> remoteId,
   Value<String> name,
   Value<String> sensorPeriod,
   Value<DateTime?> lastUpdate,
@@ -2214,11 +2169,8 @@ class $$TagsTableFilterComposer extends Composer<_$AppDatabase, $TagsTable> {
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get uid => $composableBuilder(
-      column: $table.uid, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get deviceAddress => $composableBuilder(
-      column: $table.deviceAddress, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
@@ -2303,12 +2255,8 @@ class $$TagsTableOrderingComposer extends Composer<_$AppDatabase, $TagsTable> {
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get uid => $composableBuilder(
-      column: $table.uid, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get deviceAddress => $composableBuilder(
-      column: $table.deviceAddress,
-      builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+      column: $table.remoteId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnOrderings(column));
@@ -2353,11 +2301,8 @@ class $$TagsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get uid =>
-      $composableBuilder(column: $table.uid, builder: (column) => column);
-
-  GeneratedColumn<String> get deviceAddress => $composableBuilder(
-      column: $table.deviceAddress, builder: (column) => column);
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
@@ -2456,8 +2401,7 @@ class $$TagsTableTableManager extends RootTableManager<
               $$TagsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            Value<String> uid = const Value.absent(),
-            Value<String?> deviceAddress = const Value.absent(),
+            Value<String?> remoteId = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String> sensorPeriod = const Value.absent(),
             Value<DateTime?> lastUpdate = const Value.absent(),
@@ -2465,8 +2409,7 @@ class $$TagsTableTableManager extends RootTableManager<
           }) =>
               TagsCompanion(
             id: id,
-            uid: uid,
-            deviceAddress: deviceAddress,
+            remoteId: remoteId,
             name: name,
             sensorPeriod: sensorPeriod,
             lastUpdate: lastUpdate,
@@ -2474,8 +2417,7 @@ class $$TagsTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
-            required String uid,
-            Value<String?> deviceAddress = const Value.absent(),
+            Value<String?> remoteId = const Value.absent(),
             required String name,
             required String sensorPeriod,
             Value<DateTime?> lastUpdate = const Value.absent(),
@@ -2483,8 +2425,7 @@ class $$TagsTableTableManager extends RootTableManager<
           }) =>
               TagsCompanion.insert(
             id: id,
-            uid: uid,
-            deviceAddress: deviceAddress,
+            remoteId: remoteId,
             name: name,
             sensorPeriod: sensorPeriod,
             lastUpdate: lastUpdate,

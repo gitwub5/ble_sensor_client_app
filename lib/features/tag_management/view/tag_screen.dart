@@ -6,31 +6,33 @@ import './bluetooth_scan_screen.dart'; // 새 블루투스 탐색 페이지 impo
 class TagScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final tagViewModel = Provider.of<TagViewModel>(context);
-
     return Scaffold(
       appBar: AppBar(title: Text("Tag 관리")),
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              itemCount: tagViewModel.tags.length,
-              itemBuilder: (context, index) {
-                final tag = tagViewModel.tags[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    leading: Checkbox(
-                      value: tag.isSelected,
-                      onChanged: (value) {
-                        tagViewModel.toggleSelection(index);
-                      },
-                    ),
-                    title: Text("${tag.deviceName} (${tag.tagId})"),
-                    subtitle: Text(
-                      "업데이트: ${tag.lastUpdated} | 냉장고: ${tag.fridgeName}",
-                    ),
-                  ),
+            child: Consumer<TagViewModel>(
+              builder: (context, tagViewModel, child) {
+                return ListView.builder(
+                  itemCount: tagViewModel.tags.length,
+                  itemBuilder: (context, index) {
+                    final tag = tagViewModel.tags[index];
+                    return Card(
+                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: ListTile(
+                        leading: Checkbox(
+                          value: tag.isSelected,
+                          onChanged: (value) {
+                            tagViewModel.toggleSelection(index);
+                          },
+                        ),
+                        title: Text("${tag.deviceName} (${tag.remoteId})"),
+                        subtitle: Text(
+                          "업데이트: ${tag.lastUpdated} | 냉장고: ${tag.fridgeName}",
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -45,12 +47,17 @@ class TagScreen extends StatelessWidget {
                       _navigateToBluetoothScanScreen(context), // 블루투스 탐색 페이지 이동
                   child: Text("등록"),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    tagViewModel.removeSelectedTags();
+                Consumer<TagViewModel>(
+                  builder: (context, tagViewModel, child) {
+                    return ElevatedButton(
+                      onPressed: () {
+                        tagViewModel.removeSelectedTags();
+                      },
+                      style:
+                          ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      child: Text("해제", style: TextStyle(color: Colors.white)),
+                    );
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: Text("해제", style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
