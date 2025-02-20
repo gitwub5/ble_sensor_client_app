@@ -1,5 +1,4 @@
-/// 📌 BLE 명령어 타입 (setting, update)
-enum CommandType { setting, update }
+import 'package:bluetooth_app/shared/enums/command_type.dart';
 
 /// 📌 BLE 명령어 모델
 class BluetoothCommand {
@@ -19,14 +18,15 @@ class BluetoothCommand {
   /// 📌 명령어를 BLE로 전송할 문자열 포맷으로 변환
   String toCommandString() {
     final String cmd = _commandTypeToString(commandType);
-    final String latestTimeStr =
-        latestTime != null ? latestTime!.toIso8601String() : '';
+    final String latestTimeStr = latestTime != null
+        ? latestTime!.toIso8601String().split('.')[0]
+        : ''; // 소수점 이하 제거
     final String periodStr = period != null
         ? '${period!.inHours.toString().padLeft(2, '0')}:${(period!.inMinutes % 60).toString().padLeft(2, '0')}:${(period!.inSeconds % 60).toString().padLeft(2, '0')}'
         : '';
     final String nameStr = name ?? '';
 
-    return '$cmd|$latestTimeStr|$periodStr|$nameStr.'; //  끝에 '.' 추가
+    return '$cmd|$latestTimeStr|$periodStr|$nameStr.'; // 끝에 '.' 추가
   }
 
   /// 📌 CommandType을 문자열로 변환
