@@ -2,17 +2,26 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:bluetooth_app/core/bluetooth/services/state_service.dart';
+import 'package:bluetooth_app/core/bluetooth/utils/ble_uuid.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fb;
 
 class BluetoothConnectionService {
   final BluetoothStateService _bluetoothStateService;
+  final BleUUID _bleUUID;
   fb.BluetoothDevice? _connectedDevice;
   StreamSubscription<fb.BluetoothConnectionState>? _connectionSubscription;
+  StreamSubscription<List<int>>? _txSubscription;
 
   final Map<String, fb.BluetoothService> _services = {};
   final Map<String, fb.BluetoothCharacteristic> _characteristics = {};
 
-  BluetoothConnectionService(this._bluetoothStateService);
+  // 데이터 스트림 컨트롤러 추가
+  final StreamController<String> _txStreamController =
+      StreamController<String>.broadcast();
+
+  Stream<String> get txStream => _txStreamController.stream;
+
+  BluetoothConnectionService(this._bluetoothStateService, this._bleUUID);
 
   /// 📌 BLE 장치 연결
   Future<void> connectToDevice(fb.BluetoothDevice device,
@@ -38,10 +47,10 @@ class BluetoothConnectionService {
       _connectedDevice = device;
       print("✅ Connected to ${device.remoteId}");
 
-      // 서비스 검색 및 캐싱
-      await _discoverServices();
+      await _discoverServices(); // 서비스 검색 및 캐싱
+      await _subscribeToTXCharacteristic(); // TX 구독 시작 (데이터 수신)
 
-      // ✅ 연결 상태 모니터링 추가 (끊어졌을 때 감지)
+      // 연결 상태 모니터링 추가 (끊어졌을 때 감지)
       _monitorConnectionState(device);
     } catch (e) {
       print("❌ Connection failed: $e");
@@ -65,6 +74,9 @@ class BluetoothConnectionService {
       _characteristics.clear();
       await _connectionSubscription?.cancel();
       _connectionSubscription = null;
+
+      await _txSubscription?.cancel(); // TX 구독 해제
+      _txSubscription = null;
 
       print("🔌 Disconnected.");
     }
@@ -105,24 +117,22 @@ class BluetoothConnectionService {
     return _characteristics[uuid];
   }
 
-  /// 📌 Read Characteristic
-  //  특정 Characteristic UUID로 데이터 읽기
-  Future<String?> readCharacteristic(String characteristicUuid) async {
+  /// 📌 Read Characteristic (일반적으로 필요 없음 - TX 구독을 대신 사용)
+  Future<String?> readCharacteristic() async {
     if (_connectedDevice == null) {
       print("❌ No device connected. Cannot read characteristic.");
       return null;
     }
 
-    // 캐싱된 characteristic 가져오기
-    final characteristic = _characteristics[characteristicUuid];
+    // ✅ `BleUUID`에서 TX UUID 사용하도록 변경
+    final characteristic = getCharacteristic(_bleUUID.txUuidString);
     if (characteristic == null) {
-      print("⚠️ Characteristic UUID not found: $characteristicUuid");
+      print("⚠️ TX Characteristic UUID not found");
       return null;
     }
 
-    // Characteristic이 읽기 가능한지 확인
     if (!characteristic.properties.read) {
-      print("❌ Characteristic ${characteristicUuid} does not support read.");
+      print("❌ Characteristic ${_bleUUID.txUuidString} does not support read.");
       return null;
     }
 
@@ -130,45 +140,66 @@ class BluetoothConnectionService {
       List<int> data = await characteristic.read();
       String receivedData = utf8.decode(data);
 
-      print("📥 Received Data: $receivedData");
+      print("📥 Received Data (Read): $receivedData");
       return receivedData;
     } catch (e) {
-      print("❌ Failed to read characteristic $characteristicUuid: $e");
+      print("❌ Failed to read TX characteristic: $e");
       return null;
     }
   }
 
+  /// 📌 TX Characteristic 구독
+  Future<void> _subscribeToTXCharacteristic() async {
+    final characteristic = getCharacteristic(_bleUUID.txUuidString);
+    if (characteristic == null) {
+      print("❌ TX Characteristic not found");
+      return;
+    }
+
+    // 기존 구독 해제
+    await _txSubscription?.cancel();
+    _txSubscription = characteristic.onValueReceived.listen((data) {
+      String receivedData = utf8.decode(data);
+      print("📥 Received Data (onValueReceived): $receivedData");
+
+      // 데이터 수신 시 Stream에 추가
+      _txStreamController.add(receivedData);
+    });
+
+    await characteristic.setNotifyValue(true);
+    print("🔔 Subscribed to TX Characteristic.");
+  }
+
   /// 📌 Write Characteristic (20바이트 단위로 Split Write)
-  Future<bool> writeCharacteristic(
-      String characteristicUuid, String command) async {
+  Future<bool> writeCharacteristic(String command) async {
     if (_connectedDevice == null) {
       print("❌ No device connected. Cannot write characteristic.");
       return false;
     }
 
-    // 캐싱된 characteristic 가져오기
-    final characteristic = _characteristics[characteristicUuid];
+    // ✅ `BleUUID`에서 RX UUID 사용하도록 변경
+    final characteristic = getCharacteristic(_bleUUID.rxUuidString);
     if (characteristic == null) {
-      print("⚠️ Characteristic UUID not found: $characteristicUuid");
+      print("⚠️ RX Characteristic UUID not found");
       return false;
     }
 
-    // Characteristic이 쓰기 가능한지 확인
     if (!characteristic.properties.write) {
-      print("❌ Characteristic $characteristicUuid does not support write.");
+      print(
+          "❌ Characteristic ${_bleUUID.rxUuidString} does not support write.");
       return false;
     }
 
     try {
-      List<int> data = utf8.encode(command); // String → UTF-8 바이트 변환
-      int chunkSize = 20; // **항상 20바이트 단위로 나눠서 전송**
+      List<int> data = utf8.encode(command);
+      int chunkSize = 20;
 
       await _splitWrite(characteristic, data, chunkSize);
 
       print("📤 Sent Command: $command (Split Write - 20 Bytes Per Chunk)");
       return true;
     } catch (e) {
-      print("❌ Failed to write characteristic $characteristicUuid: $e");
+      print("❌ Failed to write RX characteristic: $e");
       return false;
     }
   }
@@ -213,6 +244,8 @@ class BluetoothConnectionService {
   void dispose() {
     _connectionSubscription?.cancel();
     _connectionSubscription = null;
+    _txSubscription?.cancel();
+    _txStreamController.close();
     _services.clear();
     _characteristics.clear();
   }
