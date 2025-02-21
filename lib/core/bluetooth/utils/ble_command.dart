@@ -1,7 +1,7 @@
-/// 📌 BLE 명령어 타입 (start, setting, update)
-enum CommandType { start, setting, update }
+import 'dart:convert';
+import 'package:bluetooth_app/shared/enums/command_type.dart';
 
-/// 📌 BLE 명령어 모델
+/// 📌 BLE 명령어 모델 (JSON 기반)
 class BluetoothCommand {
   final CommandType commandType; // 명령어 타입
   final DateTime? latestTime; // 최신시간 (nullable)
@@ -16,48 +16,38 @@ class BluetoothCommand {
     this.name,
   });
 
-  /// 📌 명령어를 BLE로 전송할 문자열 포맷으로 변환
-  String toCommandString() {
-    final String cmd = _commandTypeToString(commandType);
-    final String latestTimeStr =
-        latestTime != null ? latestTime!.toIso8601String() : '';
-    final String periodStr = period != null
-        ? '${period!.inHours.toString().padLeft(2, '0')}:${(period!.inMinutes % 60).toString().padLeft(2, '0')}:${(period!.inSeconds % 60).toString().padLeft(2, '0')}'
-        : '';
-    final String nameStr = name ?? '';
+  /// 📌 명령어를 JSON 형식으로 변환
+  String toJsonString() {
+    final Map<String, dynamic> jsonMap = {
+      "command": _commandTypeToString(commandType),
+      "latest_time": latestTime?.toIso8601String().split('.')[0], // 밀리초 제거
+      "period": period != null
+          ? '${period!.inHours.toString().padLeft(2, '0')}:${(period!.inMinutes % 60).toString().padLeft(2, '0')}:${(period!.inSeconds % 60).toString().padLeft(2, '0')}'
+          : null,
+      "name": name,
+    };
 
-    return '$cmd|$latestTimeStr|$periodStr|$nameStr';
+    return json.encode(jsonMap); // JSON 문자열 변환
   }
 
-  /// 📌 문자열 명령어를 객체로 변환 (BLE 수신 시 사용)
-  factory BluetoothCommand.fromString(String commandString) {
-    final parts = commandString.split('|');
-    if (parts.length < 1 || parts.length > 4) {
-      throw FormatException('Invalid command format: $commandString');
-    }
-
-    final commandType = _stringToCommandType(parts[0]);
-    final latestTime = (parts.length > 1 && parts[1].isNotEmpty)
-        ? DateTime.tryParse(parts[1])
-        : null;
-    final period = (parts.length > 2 && parts[2].isNotEmpty)
-        ? _parseDuration(parts[2])
-        : null;
-    final name = (parts.length > 3 && parts[3].isNotEmpty) ? parts[3] : null;
+  /// 📌 JSON 문자열을 `BluetoothCommand` 객체로 변환 (BLE 수신 시 사용)
+  factory BluetoothCommand.fromJsonString(String jsonString) {
+    final Map<String, dynamic> jsonMap = json.decode(jsonString);
 
     return BluetoothCommand(
-      commandType: commandType,
-      latestTime: latestTime,
-      period: period,
-      name: name,
+      commandType: _stringToCommandType(jsonMap["command"]),
+      latestTime: jsonMap["latest_time"] != null
+          ? DateTime.tryParse(jsonMap["latest_time"])
+          : null,
+      period:
+          jsonMap["period"] != null ? _parseDuration(jsonMap["period"]) : null,
+      name: jsonMap["name"],
     );
   }
 
   /// 📌 CommandType을 문자열로 변환
   static String _commandTypeToString(CommandType type) {
     switch (type) {
-      case CommandType.start:
-        return 'start';
       case CommandType.setting:
         return 'setting';
       case CommandType.update:
@@ -68,8 +58,6 @@ class BluetoothCommand {
   /// 📌 문자열을 CommandType으로 변환
   static CommandType _stringToCommandType(String type) {
     switch (type.toLowerCase()) {
-      case 'start':
-        return CommandType.start;
       case 'setting':
         return CommandType.setting;
       case 'update':
@@ -99,16 +87,5 @@ final command = BluetoothCommand(
 );
 
 String bleCommand = command.toCommandString();
-print(bleCommand); // "start|2025-02-13T15:30:00|00:15:00|MySensor"
-*/
-
-/* 
-// 2️⃣ BLE에서 수신한 데이터 변환 (fromString())
-String receivedCommand = "update|2025-02-13T16:00:00||";
-final parsedCommand = BluetoothCommand.fromString(receivedCommand);
-
-print(parsedCommand.commandType); // CommandType.update
-print(parsedCommand.latestTime);  // 2025-02-13T16:00:00
-print(parsedCommand.period);      // null
-print(parsedCommand.name);        // null
+print(bleCommand); // "start|2025-02-13T15:30:00|00:15:00|MySensor."
 */

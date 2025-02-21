@@ -4,9 +4,9 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fb;
 
 /// 📌 BLE UUID를 상수로 관리하는 클래스
 class BleUUID {
-  final String serviceUuidStr = "5f97247b-4474-424c-a826-f8ec299b6937";
-  final String rxUuidStr = "5f97247b-4474-424c-a826-f8ec299b6938";
-  final String txUuidStr = "5f97247b-4474-424c-a826-f8ec299b6939";
+  final String serviceUuidString = "5f97247b-4474-424c-a826-f8ec299b6937";
+  final String rxUuidString = "5f97247b-4474-424c-a826-f8ec299b6938";
+  final String txUuidString = "5f97247b-4474-424c-a826-f8ec299b6939";
 
   /// ✅ FlutterBluePlus에서 사용할 UUID 형식 변환
   final fb.Guid serviceUuid;
