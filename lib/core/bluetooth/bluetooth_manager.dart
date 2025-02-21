@@ -18,7 +18,7 @@ class BluetoothManager {
   final BleUUID bleUUID = BleUUID();
 
   BluetoothManager._internal(this.stateService)
-      : scanService = BluetoothScanService(stateService),
+      : scanService = BluetoothScanService(stateService, BleUUID()),
         connectionService = BluetoothConnectionService(stateService, BleUUID());
 
   /// ✅ 로그 활성화/비활성화
