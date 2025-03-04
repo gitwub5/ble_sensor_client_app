@@ -252,7 +252,7 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
       additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 20),
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 10),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _sensorPeriodMeta =
