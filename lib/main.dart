@@ -11,18 +11,19 @@ import 'features/tag_management/viewmodel/tag_viewmodel.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 비동기 초기화
 
-  //  BluetoothManager 인스턴스 생성 (싱글턴 사용)
+  //  BluetoothManager 싱글턴 인스턴스 생성
   final bluetoothManager = BluetoothManager();
   bluetoothManager.setLoggingEnabled(true);
 
-  // 데이터베이스 인스턴스 생성
-  final database = await AppDatabase.getInstance();
+  final database = AppDatabase(); // Drift 싱글턴 인스턴스
+  final tagRepository = TagRepository(database); // Repository에 DB 주입
 
   runApp(
     MultiProvider(
       providers: [
         Provider(create: (_) => bluetoothManager), // BluetoothManager 주입
-        Provider(create: (_) => database),
+        Provider(create: (_) => database), // Database 주입
+        Provider(create: (_) => tagRepository), // Repository 주입
         ChangeNotifierProvider(
             create: (context) =>
                 HomeViewModel(context.read<BluetoothManager>())),

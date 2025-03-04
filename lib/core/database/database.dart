@@ -1,43 +1,58 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'dart:async';
+import 'dart:io';
+import 'package:drift/drift.dart';
+import 'package:drift/native.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
-// 테이블 스키마 파일 import
+// 테이블 불러오기
 import 'tables/tags.dart';
 import 'tables/tag_data.dart';
 import 'tables/refrigerators.dart';
 import 'tables/medicines.dart';
 import 'tables/medicine_details.dart';
 
-class AppDatabase {
-  static Database? _database;
+// DAO 불러오기
+import 'daos/tag_dao.dart';
 
-  /// 📌 싱글턴 인스턴스 반환
-  static Future<Database> getInstance() async {
-    if (_database != null) return _database!;
+part 'database.g.dart';
 
-    _database = await _initDB();
-    return _database!;
+@DriftDatabase(
+  tables: [Tags, TagData, Refrigerators, Medicines, MedicineDetails],
+  daos: [TagDao],
+)
+class AppDatabase extends _$AppDatabase {
+  // 싱글턴 패턴 적용 (중복 생성 방지)
+  static AppDatabase? _instance;
+
+  AppDatabase._internal() : super(_openConnection());
+
+  factory AppDatabase() {
+    _instance ??= AppDatabase._internal();
+    return _instance!;
   }
 
-  /// 📌 데이터베이스 초기화 및 생성
-  static Future<Database> _initDB() async {
-    final path = join(await getDatabasesPath(), 'app_database.db');
+  @override
+  int get schemaVersion => 1; // 데이터베이스 버전
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await _createTables(db);
-      },
-    );
-  }
+  // 마이그레이션 지원 (onCreate, onUpgrade)
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll(); // 처음 실행될 때 모든 테이블 생성
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < to) {
+            // ✅ 마이그레이션 로직 추가 가능
+          }
+        },
+      );
+}
 
-  static Future<void> _createTables(Database db) async {
-    await db.execute(createTagsTable);
-    await db.execute(createTagDataTable);
-    await db.execute(createRefrigeratorsTable);
-    await db.execute(createMedicinesTable);
-    await db.execute(createMedicineDetailsTable);
-  }
+// `LazyDatabase`로 비동기 DB 생성
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'app_database.sqlite'));
+    return NativeDatabase(file);
+  });
 }
