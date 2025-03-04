@@ -1,26 +1,28 @@
-import 'package:drift/drift.dart';
-import '../../../core/database/database.dart';
-import '../../../core/database/daos/tag_dao.dart';
+import 'package:sqflite/sqflite.dart';
 
 class TagRepository {
-  final TagDao _tagDao;
+  final Database _db;
 
-  TagRepository(AppDatabase database) : _tagDao = TagDao(database);
+  TagRepository(this._db);
 
-  Future<List<Tag>> fetchTags() async {
-    return await _tagDao.getAllTags();
+  /// ✅ 태그 추가 (뷰모델에서 데이터 넣을 때 DTO 형식으로 받게 할 수도 있음)
+  Future<int> addTag(
+      String remoteId, String name, Duration period, DateTime updatedAt) async {
+    return await _db.insert('tags', {
+      'remoteId': remoteId,
+      'name': name,
+      'sensor_period':
+          period.inSeconds, // 초 단위 저장 (TODO: 00:00:00 형태로 수정하거나 해야함)
+      'updated_at': updatedAt.toIso8601String(),
+    });
   }
 
-  Future<void> addTag(String uid, String name) async {
-    final newTag = TagsCompanion(
-      remoteId: Value(uid),
-      name: Value(name),
-      sensorPeriod: Value("00:30:00"),
-    );
-    await _tagDao.insertTag(newTag);
+  /// ✅ 모든 태그 가져오기 (모델 변환 포함)
+  Future<List<Map<String, dynamic>>> fetchTags() async {
+    return await _db.query('tags');
   }
 
-  Future<void> deleteTag(int id) async {
-    await _tagDao.deleteTag(id);
+  Future<int> deleteTag(int id) async {
+    return await _db.delete('tags', where: 'id = ?', whereArgs: [id]);
   }
 }

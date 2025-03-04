@@ -1,14 +1,16 @@
 class TagModel {
+  final String name;
   final String remoteId;
-  final String deviceName;
-  final String lastUpdated;
+  final Duration period;
+  final DateTime lastUpdated;
   final String fridgeName;
   bool isSelected; // 체크박스 상태
 
   TagModel({
+    required this.name,
     required this.remoteId,
-    required this.deviceName,
     required this.lastUpdated,
+    required this.period,
     required this.fridgeName,
     this.isSelected = false,
   });
