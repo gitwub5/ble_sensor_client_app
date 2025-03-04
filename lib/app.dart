@@ -5,6 +5,7 @@ import 'features/tag_management/view/tag_screen.dart';
 import 'features/medicine_db/view/database_screen.dart';
 import 'features/fridge_info/view/fridge_screen.dart';
 import 'features/inventory_management/view/inventory_screen.dart';
+import 'test/ble/view/ble_scan_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -38,6 +39,7 @@ class App extends StatelessWidget {
         '/database': (context) => DatabaseScreen(),
         '/fridge': (context) => FridgeScreen(),
         '/inventory': (context) => InventoryScreen(),
+        '/test': (context) => BleTestScanScreen(),
       },
     );
   }

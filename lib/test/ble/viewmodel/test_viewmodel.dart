@@ -1,20 +1,18 @@
+import 'package:bluetooth_app/core/bluetooth/utils/ble_command.dart';
+import 'package:bluetooth_app/shared/enums/command_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fb;
 import 'package:bluetooth_app/core/bluetooth/bluetooth_manager.dart';
 
-class HomeViewModel extends ChangeNotifier {
+class BleTestViewModel extends ChangeNotifier {
   final BluetoothManager _bluetoothManager;
   List<fb.ScanResult> scanResults = [];
-  fb.BluetoothAdapterState _bluetoothState = fb.BluetoothAdapterState.unknown;
   bool isScanning = false;
 
-  List<String> receivedDataList = [];
-
-  HomeViewModel(this._bluetoothManager) {
-    // ✅ Bluetooth 상태 변화 감지하여 UI 업데이트
+  BleTestViewModel(this._bluetoothManager) {
+    // Bluetooth 상태 변화 감지하여 UI 업데이트
     _bluetoothManager.stateService.setBluetoothStateListener((state) {
-      _bluetoothState = state;
-      notifyListeners(); // ✅ UI 업데이트
+      notifyListeners(); // UI 업데이트
     });
 
     // TX 데이터 구독
@@ -23,15 +21,10 @@ class HomeViewModel extends ChangeNotifier {
     });
   }
 
-  /// BLE에서 받은 데이터 처리 (TODO: 응답 중에서 CSV 데이터들만 처리하여 저장하게 구현해야함)
+  /// BLE에서 받은 데이터 처리
   void _handleReceivedData(String data) {
-    receivedDataList.add(data);
-    notifyListeners();
-    print("📥 BLE 데이터 추가됨: $data");
+    print("📥 BLE 데이터 수신: $data");
   }
-
-  /// ✅ 블루투스 현재 상태 가져오기
-  fb.BluetoothAdapterState get bluetoothState => _bluetoothState;
 
   /// ✅ 블루투스 장치 검색 시작 (로딩 상태 추가)
   Future<void> startScan() async {
@@ -70,5 +63,26 @@ class HomeViewModel extends ChangeNotifier {
       print("❌ Disconnection failed: $e");
     }
     notifyListeners();
+  }
+
+  /// ✅ BLE 장치로 데이터 쓰기
+  Future<void> writeData(CommandType commandType,
+      {DateTime? latestTime, Duration? period, String? name}) async {
+    try {
+      final command = BluetoothCommand(
+        commandType: commandType,
+        latestTime: latestTime,
+        period: period,
+        name: name,
+      );
+
+      String data = command.toJsonString();
+
+      await _bluetoothManager.connectionService.writeCharacteristic(data);
+
+      print("📤 Sent Data: $data");
+    } catch (e) {
+      print("❌ Write failed: $e");
+    }
   }
 }

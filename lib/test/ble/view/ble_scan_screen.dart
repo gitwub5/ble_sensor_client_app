@@ -1,12 +1,12 @@
 import 'package:bluetooth_app/features/tag_management/view/tag_registration_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodel/tag_viewmodel.dart';
+import '../viewmodel/test_viewmodel.dart';
 
-class BluetoothScanScreen extends StatelessWidget {
+class BleTestScanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final tagViewModel = Provider.of<TagViewModel>(context);
+    final tagViewModel = Provider.of<BleTestViewModel>(context);
 
     return Scaffold(
       appBar: AppBar(title: Text("블루투스 기기 탐색")),
