@@ -1,11 +1,15 @@
-const String createMedicineDetailsTable = '''
-  CREATE TABLE medicine_details (
-    medicine_id INTEGER PRIMARY KEY,
-    medicine_name TEXT NOT NULL,
-    medicine_type TEXT NOT NULL,
-    manufacturer TEXT NOT NULL,
-    expiration_date TEXT NOT NULL,
-    storage_date TEXT DEFAULT (date('now')),
-    FOREIGN KEY (medicine_id) REFERENCES medicines(id) ON DELETE CASCADE
-  )
-''';
+import 'package:drift/drift.dart';
+import 'medicines.dart';
+
+class MedicineDetails extends Table {
+  IntColumn get id => integer().autoIncrement()(); // PK 추가
+  IntColumn get medicineId =>
+      integer().unique().references(Medicines, #id)(); // 의약품 ID (FK)
+  TextColumn get medicineName => text().withLength(min: 1, max: 255)(); // 의약품명
+  TextColumn get medicineType =>
+      text().withLength(min: 1, max: 100)(); // 의약품 종류
+  TextColumn get manufacturer => text().withLength(min: 1, max: 255)(); // 제약사
+  DateTimeColumn get expirationDate => dateTime()(); // 유통기한
+  DateTimeColumn get storageDate =>
+      dateTime().withDefault(currentDateAndTime)(); // 보관일자
+}

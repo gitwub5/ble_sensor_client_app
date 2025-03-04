@@ -1,11 +1,12 @@
-const String createTagsTable = '''
-  CREATE TABLE tags (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    remoteId TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
-    sensor_period INTEGER NOT NULL,
-    updated_at TEXT NOT NULL,
-    refrigerator_id INTEGER,
-    FOREIGN KEY (refrigerator_id) REFERENCES refrigerators(id) ON DELETE SET NULL
-  )
-''';
+import 'package:drift/drift.dart';
+import 'refrigerators.dart';
+
+class Tags extends Table {
+  IntColumn get id => integer().autoIncrement()(); // 기본 키 (PK)
+  TextColumn get remoteId => text().unique()(); // 블루투스 UID
+  TextColumn get name => text().withLength(min: 1, max: 20)(); // 태그 이름
+  IntColumn get sensorPeriod => integer()(); // 감지 주기 (초)
+  DateTimeColumn get updatedAt => dateTime()(); // 마지막 통신 시간
+  IntColumn get refrigeratorId =>
+      integer().nullable().references(Refrigerators, #id)(); // 냉장고 FK
+}
