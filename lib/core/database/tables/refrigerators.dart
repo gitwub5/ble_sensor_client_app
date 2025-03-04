@@ -1,7 +1,7 @@
-import 'package:drift/drift.dart';
-
-class Refrigerators extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get name => text().withLength(min: 1, max: 255)();
-  TextColumn get location => text().withLength(min: 1, max: 255)();
-}
+const String createRefrigeratorsTable = '''
+  CREATE TABLE refrigerators (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    location TEXT NOT NULL
+  )
+''';
