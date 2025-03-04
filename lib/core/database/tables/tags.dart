@@ -1,12 +1,11 @@
-import 'package:drift/drift.dart';
-import 'refrigerators.dart';
-
-class Tags extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get remoteId => text().nullable().unique()();
-  TextColumn get name => text().withLength(min: 1, max: 255)();
-  TextColumn get sensorPeriod => text()();
-  DateTimeColumn get lastUpdate => dateTime().nullable()();
-  IntColumn get refrigeratorId =>
-      integer().references(Refrigerators, #id).nullable()();
-}
+const String createTagsTable = '''
+  CREATE TABLE tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    remoteId TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    sensor_period INTEGER NOT NULL,
+    updated_at TEXT NOT NULL,
+    refrigerator_id INTEGER,
+    FOREIGN KEY (refrigerator_id) REFERENCES refrigerators(id) ON DELETE SET NULL
+  )
+''';

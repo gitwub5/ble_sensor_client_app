@@ -1,11 +1,11 @@
-import 'package:drift/drift.dart';
-import 'tags.dart';
-
-class TagData extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  IntColumn get tagId => integer().references(Tags, #id)();
-  RealColumn get temperature => real()();
-  RealColumn get humidity => real()();
-  RealColumn get materialResistivity => real()();
-  DateTimeColumn get measuredAt => dateTime().withDefault(currentDateAndTime)();
-}
+const String createTagDataTable = '''
+  CREATE TABLE tag_data (
+    tag_id INTEGER NOT NULL,
+    time TEXT NOT NULL,
+    temperature REAL NOT NULL,
+    humidity REAL NOT NULL,
+    cpu_temperature REAL NOT NULL,
+    PRIMARY KEY (tag_id, time),
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+  )
+''';

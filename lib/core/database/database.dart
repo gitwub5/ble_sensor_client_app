@@ -1,36 +1,43 @@
-import 'dart:io';
-import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'dart:async';
 
-// 테이블 불러오기
+// 테이블 스키마 파일 import
 import 'tables/tags.dart';
 import 'tables/tag_data.dart';
 import 'tables/refrigerators.dart';
 import 'tables/medicines.dart';
 import 'tables/medicine_details.dart';
 
-// DAO 불러오기
-import 'daos/tag_dao.dart';
+class AppDatabase {
+  static Database? _database;
 
-part 'database.g.dart';
+  /// 📌 싱글턴 인스턴스 반환
+  static Future<Database> getInstance() async {
+    if (_database != null) return _database!;
 
-@DriftDatabase(
-  tables: [Tags, TagData, Refrigerators, Medicines, MedicineDetails],
-  daos: [TagDao],
-)
-class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+    _database = await _initDB();
+    return _database!;
+  }
 
-  @override
-  int get schemaVersion => 1;
-}
+  /// 📌 데이터베이스 초기화 및 생성
+  static Future<Database> _initDB() async {
+    final path = join(await getDatabasesPath(), 'app_database.db');
 
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'app_database.sqlite'));
-    return NativeDatabase(file);
-  });
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        await _createTables(db);
+      },
+    );
+  }
+
+  static Future<void> _createTables(Database db) async {
+    await db.execute(createTagsTable);
+    await db.execute(createTagDataTable);
+    await db.execute(createRefrigeratorsTable);
+    await db.execute(createMedicinesTable);
+    await db.execute(createMedicineDetailsTable);
+  }
 }
