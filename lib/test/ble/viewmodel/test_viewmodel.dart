@@ -10,18 +10,18 @@ class BleTestViewModel extends ChangeNotifier {
   bool isScanning = false;
 
   BleTestViewModel(this._bluetoothManager) {
-    // Bluetooth 상태 변화 감지하여 UI 업데이트
     _bluetoothManager.stateService.setBluetoothStateListener((state) {
-      notifyListeners(); // UI 업데이트
+      notifyListeners();
     });
 
-    // TX 데이터 구독
     _bluetoothManager.connectionService.txStream.listen((data) {
       _handleReceivedData(data);
     });
   }
 
-  /// BLE에서 받은 데이터 처리
+  /// ✅ BluetoothManager를 외부에서 접근 가능하도록 getter 추가
+  BluetoothManager get bluetoothManager => _bluetoothManager;
+
   void _handleReceivedData(String data) {
     print("📥 BLE 데이터 수신: $data");
   }

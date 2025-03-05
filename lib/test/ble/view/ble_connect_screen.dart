@@ -3,11 +3,34 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/test_viewmodel.dart';
 
-class BleConnectScreen extends StatelessWidget {
+class BleConnectScreen extends StatefulWidget {
   final String deviceName;
   final String remoteId;
 
   BleConnectScreen({required this.deviceName, required this.remoteId});
+
+  @override
+  _BleConnectScreenState createState() => _BleConnectScreenState();
+}
+
+class _BleConnectScreenState extends State<BleConnectScreen> {
+  final List<String> receivedData = []; // 📌 BLE 수신 로그 저장 리스트
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 📌 TX 데이터 구독 - 새로운 데이터 수신 시 리스트에 추가
+    Provider.of<BleTestViewModel>(context, listen: false)
+        .bluetoothManager // ✅ _bluetoothManager 대신 bluetoothManager 사용
+        .connectionService
+        .txStream
+        .listen((data) {
+      setState(() {
+        receivedData.add(data); // 새로운 데이터 추가
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +43,10 @@ class BleConnectScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("디바이스 이름: $deviceName",
+            Text("디바이스 이름: ${widget.deviceName}",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Text("BLE ID: $remoteId", style: TextStyle(fontSize: 16)),
+            Text("BLE ID: ${widget.remoteId}", style: TextStyle(fontSize: 16)),
             SizedBox(height: 20),
 
             /// 명령어 전송 버튼
@@ -32,8 +55,7 @@ class BleConnectScreen extends StatelessWidget {
                 tagViewModel.writeData(
                   CommandType.setting,
                   latestTime: DateTime.now(),
-                  period: Duration(seconds: 30),
-                  name: "pico",
+                  period: Duration(hours: 1),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -77,9 +99,47 @@ class BleConnectScreen extends StatelessWidget {
               ),
               child: Text("해제"),
             ),
+
+            SizedBox(height: 20),
+
+            /// 📌 BLE 수신 데이터 로그
+            Text("📡 수신 데이터 로그", style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: receivedData.isEmpty
+                    ? Center(
+                        child: Text("수신된 데이터가 없습니다.",
+                            style: TextStyle(color: Colors.white70)))
+                    : ListView.builder(
+                        itemCount: receivedData.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2.0),
+                            child: Text(
+                              receivedData[index],
+                              style: TextStyle(color: Colors.greenAccent),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    receivedData.clear(); // 📌 화면을 나갈 때 로그 초기화
+    super.dispose();
   }
 }

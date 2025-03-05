@@ -1,4 +1,5 @@
 import 'package:bluetooth_app/features/tag_management/view/tag_registration_screen.dart';
+import 'package:bluetooth_app/test/ble/view/ble_connect_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/test_viewmodel.dart';
@@ -9,7 +10,7 @@ class BleTestScanScreen extends StatelessWidget {
     final tagViewModel = Provider.of<BleTestViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text("블루투스 기기 탐색")),
+      appBar: AppBar(title: Text("(TEST)블루투스 탐색")),
       body: Container(
         alignment: Alignment.center,
         child: Column(
@@ -65,7 +66,7 @@ class BleTestScanScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => TagRegistrationScreen(
+                                builder: (context) => BleConnectScreen(
                                   deviceName: device.platformName,
                                   remoteId: device.remoteId.toString(),
                                 ),
