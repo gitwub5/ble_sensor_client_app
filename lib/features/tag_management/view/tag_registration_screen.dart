@@ -58,20 +58,42 @@ class _TagRegistrationScreenState extends State<TagRegistrationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔹 태그 이름 입력 설명 추가 (입력 제한 안내 포함)
+              // 🔹 RemoteId 및 DeviceName 표시
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200], // 연한 회색 배경
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Remote ID: ${widget.remoteId}",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              SizedBox(height: 24),
+
+              // 🔹 태그 이름 입력 설명
               Text(
-                "등록할 기기의 이름을 입력하세요. (최대 8글자, 영어와 숫자만 가능)",
+                "등록할 기기의 이름을 입력하세요.",
                 style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
 
-              // 🔹 Device Name 입력 (기본값: deviceName, 8글자 이하, 영어/숫자만 가능)
+              // 🔹 태그 이름 입력 (연한 회색 배경 + 파란색 테두리)
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: "Tag Name",
-                  hintText: "태그 이름 입력",
-                  border: OutlineInputBorder(),
+                  labelText: "Tag ID",
+                  hintText: "최대 8글자, 영어와 숫자만 가능",
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                  filled: true,
                   helperText: "예: Sensor01",
                   suffixIcon: _nameController.text.isNotEmpty
                       ? IconButton(
@@ -82,32 +104,40 @@ class _TagRegistrationScreenState extends State<TagRegistrationScreen> {
                       : null,
                 ),
                 validator: _validateTagName,
-                maxLength: 8, // ✅ 8글자 제한
+                maxLength: 8, // 8글자 제한
                 keyboardType: TextInputType.text,
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 24),
 
-              // 🔹 감지 주기 설명 추가 (필수 입력 안내 포함)
+              // 🔹 감지 주기 설명 추가
               Text(
                 "기기의 데이터를 전송할 간격을 설정하세요.",
                 style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
 
-              // 🔹 감지 주기 선택 (Dropdown)
+              // 🔹 감지 주기 선택 (흰색 배경 + 초록색 테두리)
               DropdownButtonFormField<Duration>(
                 value: _selectedPeriod,
                 decoration: InputDecoration(
                   labelText: "감지 주기",
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
+                  filled: true,
                 ),
                 items: [
+                  DropdownMenuItem(
+                      value: Duration(minutes: 10), child: Text("10분")),
                   DropdownMenuItem(
                       value: Duration(minutes: 30), child: Text("30분")),
                   DropdownMenuItem(
                       value: Duration(hours: 1), child: Text("1시간")),
                   DropdownMenuItem(
                       value: Duration(hours: 3), child: Text("3시간")),
+                  DropdownMenuItem(
+                      value: Duration(hours: 6), child: Text("6시간")),
                   DropdownMenuItem(
                       value: Duration(hours: 12), child: Text("12시간")),
                 ],
@@ -122,20 +152,21 @@ class _TagRegistrationScreenState extends State<TagRegistrationScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
+                      final currentTime = DateTime.now();
                       // 🔹 BLE 데이터 전송
                       await tagViewModel.writeData(
                         CommandType.setting,
-                        latestTime: DateTime.now(),
+                        latestTime: currentTime,
                         period: _selectedPeriod,
                         name: _nameController.text,
                       );
 
                       // 🔹 성공적으로 전송되면 DB 저장
-                      await tagViewModel.addTag(
+                      await tagViewModel.addOrUpdateTag(
                         widget.remoteId,
                         _nameController.text,
                         _selectedPeriod!,
-                        DateTime.now(),
+                        currentTime,
                       );
 
                       // 등록 완료 메시지

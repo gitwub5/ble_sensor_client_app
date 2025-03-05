@@ -50,7 +50,9 @@ class _TagScreenState extends State<TagScreen> {
                                     title:
                                         Text("${tag.name} (${tag.remoteId})"),
                                     subtitle: Text(
-                                      "업데이트: ${tag.updatedAt} | 냉장고: ${tag.fridgeName}",
+                                      "마지막 업데이트: ${tag.formattedUpdatedAt} | "
+                                      "센서 주기: ${tag.formattedSensorPeriod} | "
+                                      "냉장고: ${tag.fridgeName}",
                                     ),
                                   ),
                                 );
