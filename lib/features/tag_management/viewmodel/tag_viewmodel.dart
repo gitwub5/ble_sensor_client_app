@@ -53,16 +53,10 @@ class TagViewModel extends ChangeNotifier {
   }
 
   // 태그 추가
-  Future<void> addTag(
+  Future<void> addOrUpdateTag(
       String remoteId, String name, Duration period, DateTime updatedAt) async {
-    await _tagRepository.addTag(remoteId, name, period, updatedAt);
-    await loadTags(); // UI 업데이트
-  }
-
-  // 태그 삭제
-  Future<void> deleteTag(int id) async {
-    await _tagRepository.deleteTag(id);
-    await loadTags();
+    await _tagRepository.addOrUpdateTag(remoteId, name, period, updatedAt);
+    await loadTags(); // UI 갱신
   }
 
   void toggleSelection(int index) {
@@ -70,7 +64,14 @@ class TagViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeSelectedTags() {
+  /// 선택된 태그 삭제 (DB에서도 삭제)
+  Future<void> removeSelectedTags() async {
+    final selectedTags = tags.where((tag) => tag.isSelected).toList();
+
+    for (final tag in selectedTags) {
+      await _tagRepository.deleteTag(tag.id); // DB에서 삭제
+    }
+
     tags.removeWhere((tag) => tag.isSelected);
     notifyListeners();
   }
