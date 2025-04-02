@@ -1,4 +1,3 @@
-import 'package:bluetooth_app/features/tag_management/view/tag_registration_screen.dart';
 import 'package:bluetooth_app/test/ble/view/ble_connect_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
