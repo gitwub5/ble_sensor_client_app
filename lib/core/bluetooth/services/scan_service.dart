@@ -11,13 +11,11 @@ class BluetoothScanService {
   BluetoothScanService(this._bluetoothStateService, this._bleUUID);
 
   /// 📌 블루투스 장치 검색 (비동기 스트림 방식)
-  Future<List<fb.ScanResult>> scanDevices({Duration? timeout}) async {
+  Future<List<fb.ScanResult>> scanDevices(Duration duration) async {
     if (!await _bluetoothStateService.ensureBluetoothIsOn()) {
       print("❌ Bluetooth is still OFF. Scan aborted.");
       return [];
     }
-
-    final scanTimeout = timeout ?? const Duration(seconds: 5);
     _scanResults.clear();
 
     // 스캔 결과 스트림 구독
@@ -38,12 +36,12 @@ class BluetoothScanService {
     // 스캔 완료되면 자동으로 subscription 해제
     fb.FlutterBluePlus.cancelWhenScanComplete(subscription);
 
-    List<fb.Guid> serviceGuids = [_bleUUID.serviceUuid];
+    List<fb.Guid> serviceGuids = [_bleUUID.service];
 
     // 스캔 시작 (필터 적용)
     await fb.FlutterBluePlus.startScan(
       withServices: serviceGuids,
-      timeout: scanTimeout,
+      timeout: duration,
     );
 
     // 스캔 완료될 때까지 대기

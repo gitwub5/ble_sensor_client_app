@@ -10,18 +10,18 @@ class BleTestViewModel extends ChangeNotifier {
   bool isScanning = false;
 
   BleTestViewModel(this._bluetoothManager) {
-    // Bluetooth 상태 변화 감지하여 UI 업데이트
     _bluetoothManager.stateService.setBluetoothStateListener((state) {
-      notifyListeners(); // UI 업데이트
+      notifyListeners();
     });
 
-    // TX 데이터 구독
-    _bluetoothManager.connectionService.txStream.listen((data) {
+    _bluetoothManager.connectionService.stream.listen((data) {
       _handleReceivedData(data);
     });
   }
 
-  /// BLE에서 받은 데이터 처리
+  /// ✅ BluetoothManager를 외부에서 접근 가능하도록 getter 추가
+  BluetoothManager get bluetoothManager => _bluetoothManager;
+
   void _handleReceivedData(String data) {
     print("📥 BLE 데이터 수신: $data");
   }
@@ -33,7 +33,8 @@ class BleTestViewModel extends ChangeNotifier {
       scanResults.clear();
       notifyListeners();
 
-      scanResults = await _bluetoothManager.scanService.scanDevices();
+      scanResults =
+          await _bluetoothManager.scanService.scanDevices(Duration(seconds: 2));
 
       isScanning = false;
       notifyListeners();
@@ -66,21 +67,16 @@ class BleTestViewModel extends ChangeNotifier {
   }
 
   /// ✅ BLE 장치로 데이터 쓰기
-  Future<void> writeData(CommandType commandType,
-      {DateTime? latestTime, Duration? period, String? name}) async {
+  Future<void> writeData({
+    required CommandType commandType,
+    required DateTime latestTime,
+    Duration? period,
+  }) async {
     try {
-      final command = BluetoothCommand(
-        commandType: commandType,
-        latestTime: latestTime,
-        period: period,
-        name: name,
-      );
+      final data = BluetoothCommand().toJsonString(latestTime, period);
 
-      String data = command.toJsonString();
-
-      await _bluetoothManager.connectionService.writeCharacteristic(data);
-
-      print("📤 Sent Data: $data");
+      await _bluetoothManager.connectionService
+          .writeCharacteristic(commandType, data);
     } catch (e) {
       print("❌ Write failed: $e");
     }
