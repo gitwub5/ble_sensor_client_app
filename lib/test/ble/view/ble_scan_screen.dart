@@ -58,8 +58,8 @@ class BleTestScanScreen extends StatelessWidget {
                       subtitle: Text(device.remoteId.toString()),
                       trailing: ElevatedButton(
                         onPressed: () async {
-                          bool success =
-                              await tagViewModel.connectToDevice(device);
+                          bool success = await tagViewModel
+                              .connectToDevice(device.remoteId.toString());
                           if (success) {
                             // ✅ 연결 완료 후 '기기 등록 페이지'로 이동
                             Navigator.push(

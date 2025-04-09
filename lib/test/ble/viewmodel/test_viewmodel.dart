@@ -13,18 +13,10 @@ class BleTestViewModel extends ChangeNotifier {
     _bluetoothManager.stateService.setBluetoothStateListener((state) {
       notifyListeners();
     });
-
-    _bluetoothManager.connectionService.stream.listen((data) {
-      _handleReceivedData(data);
-    });
   }
 
   /// ✅ BluetoothManager를 외부에서 접근 가능하도록 getter 추가
   BluetoothManager get bluetoothManager => _bluetoothManager;
-
-  void _handleReceivedData(String data) {
-    print("📥 BLE 데이터 수신: $data");
-  }
 
   /// ✅ 블루투스 장치 검색 시작 (로딩 상태 추가)
   Future<void> startScan() async {
@@ -45,9 +37,14 @@ class BleTestViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> connectToDevice(fb.BluetoothDevice device) async {
+  Future<bool> connectToDevice(
+    String remoteId, {
+    bool autoConnect = false,
+    int? mtu,
+  }) async {
     try {
-      await _bluetoothManager.connectionService.connectToDevice(device);
+      await _bluetoothManager.connectionService.connectToDevice(remoteId,
+          autoConnect: autoConnect, mtu: mtu); // ✅ 수정된 connectToDevice 호출
       notifyListeners();
       return true;
     } catch (e) {
@@ -56,10 +53,10 @@ class BleTestViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> disconnectDevice() async {
+  Future<void> disconnectDevice(String remoteId) async {
+    // ✅ remoteId를 받도록 수정
     try {
-      await _bluetoothManager.connectionService.disconnectDevice();
-      print("🔌 Device disconnected.");
+      await _bluetoothManager.connectionService.disconnectDevice(remoteId);
     } catch (e) {
       print("❌ Disconnection failed: $e");
     }
@@ -68,6 +65,7 @@ class BleTestViewModel extends ChangeNotifier {
 
   /// ✅ BLE 장치로 데이터 쓰기
   Future<void> writeData({
+    required String remoteId,
     required CommandType commandType,
     required DateTime latestTime,
     Duration? period,
@@ -75,8 +73,15 @@ class BleTestViewModel extends ChangeNotifier {
     try {
       final data = BluetoothCommand().toJsonString(latestTime, period);
 
-      await _bluetoothManager.connectionService
-          .writeCharacteristic(commandType, data);
+      final success = await _bluetoothManager.connectionService
+          .writeCharacteristic(
+              remoteId, commandType, data); // ✅ 수정된 writeCharacteristic 호출
+
+      if (success) {
+        print("✅ 데이터 전송 성공");
+      } else {
+        print("❌ 데이터 전송 실패");
+      }
     } catch (e) {
       print("❌ Write failed: $e");
     }

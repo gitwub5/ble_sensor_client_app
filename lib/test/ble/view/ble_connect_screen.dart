@@ -15,10 +15,10 @@ class BleConnectScreen extends StatefulWidget {
 }
 
 class _BleConnectScreenState extends State<BleConnectScreen> {
-  final List<String> receivedData = []; // 📌 BLE 수신 로그 저장 리스트
+  final List<Map<String, dynamic>> receivedData = [];
   final TextEditingController _hourController = TextEditingController();
   final TextEditingController _minuteController = TextEditingController();
-  late final StreamSubscription<String> _bleSubscription;
+  late final StreamSubscription<Map<String, dynamic>> _bleSubscription;
 
   @override
   void initState() {
@@ -95,6 +95,7 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
               onPressed: () {
                 Duration period = _getDurationFromInput();
                 testViewModel.writeData(
+                  remoteId: widget.remoteId,
                   commandType: CommandType.setting,
                   latestTime: DateTime.now(),
                   period: period,
@@ -114,6 +115,7 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
             ElevatedButton(
               onPressed: () {
                 testViewModel.writeData(
+                  remoteId: widget.remoteId,
                   commandType: CommandType.update,
                   latestTime: DateTime.now(),
                 );
@@ -131,8 +133,8 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
             /// 🔹 연결 해제 버튼
             ElevatedButton(
               onPressed: () {
-                testViewModel.disconnectDevice();
-                Navigator.pop(context); // 등록 페이지 닫기
+                testViewModel.disconnectDevice(widget.remoteId);
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
@@ -162,10 +164,11 @@ class _BleConnectScreenState extends State<BleConnectScreen> {
                     : ListView.builder(
                         itemCount: receivedData.length,
                         itemBuilder: (context, index) {
+                          final data = receivedData[index];
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 2.0),
                             child: Text(
-                              receivedData[index],
+                              "${data['remoteId']} -> ${data['data']}",
                               style: TextStyle(color: Colors.greenAccent),
                             ),
                           );
