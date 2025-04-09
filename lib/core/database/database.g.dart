@@ -251,8 +251,7 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 10),
+      additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 12),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   static const VerificationMeta _sensorPeriodMeta =
@@ -598,8 +597,8 @@ class $TagDataTable extends TagData with TableInfo<$TagDataTable, TagDataData> {
       'tag_id', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES tags (id)'));
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES tags (id) ON DELETE CASCADE'));
   static const VerificationMeta _timeMeta = const VerificationMeta('time');
   @override
   late final GeneratedColumn<DateTime> time = GeneratedColumn<DateTime>(
@@ -617,15 +616,9 @@ class $TagDataTable extends TagData with TableInfo<$TagDataTable, TagDataData> {
   late final GeneratedColumn<double> humidity = GeneratedColumn<double>(
       'humidity', aliasedName, false,
       type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _cpuTemperatureMeta =
-      const VerificationMeta('cpuTemperature');
-  @override
-  late final GeneratedColumn<double> cpuTemperature = GeneratedColumn<double>(
-      'cpu_temperature', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, tagId, time, temperature, humidity, cpuTemperature];
+      [id, tagId, time, temperature, humidity];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -665,14 +658,6 @@ class $TagDataTable extends TagData with TableInfo<$TagDataTable, TagDataData> {
     } else if (isInserting) {
       context.missing(_humidityMeta);
     }
-    if (data.containsKey('cpu_temperature')) {
-      context.handle(
-          _cpuTemperatureMeta,
-          cpuTemperature.isAcceptableOrUnknown(
-              data['cpu_temperature']!, _cpuTemperatureMeta));
-    } else if (isInserting) {
-      context.missing(_cpuTemperatureMeta);
-    }
     return context;
   }
 
@@ -692,8 +677,6 @@ class $TagDataTable extends TagData with TableInfo<$TagDataTable, TagDataData> {
           .read(DriftSqlType.double, data['${effectivePrefix}temperature'])!,
       humidity: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}humidity'])!,
-      cpuTemperature: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}cpu_temperature'])!,
     );
   }
 
@@ -709,14 +692,12 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
   final DateTime time;
   final double temperature;
   final double humidity;
-  final double cpuTemperature;
   const TagDataData(
       {required this.id,
       required this.tagId,
       required this.time,
       required this.temperature,
-      required this.humidity,
-      required this.cpuTemperature});
+      required this.humidity});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -725,7 +706,6 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
     map['time'] = Variable<DateTime>(time);
     map['temperature'] = Variable<double>(temperature);
     map['humidity'] = Variable<double>(humidity);
-    map['cpu_temperature'] = Variable<double>(cpuTemperature);
     return map;
   }
 
@@ -736,7 +716,6 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
       time: Value(time),
       temperature: Value(temperature),
       humidity: Value(humidity),
-      cpuTemperature: Value(cpuTemperature),
     );
   }
 
@@ -749,7 +728,6 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
       time: serializer.fromJson<DateTime>(json['time']),
       temperature: serializer.fromJson<double>(json['temperature']),
       humidity: serializer.fromJson<double>(json['humidity']),
-      cpuTemperature: serializer.fromJson<double>(json['cpuTemperature']),
     );
   }
   @override
@@ -761,7 +739,6 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
       'time': serializer.toJson<DateTime>(time),
       'temperature': serializer.toJson<double>(temperature),
       'humidity': serializer.toJson<double>(humidity),
-      'cpuTemperature': serializer.toJson<double>(cpuTemperature),
     };
   }
 
@@ -770,15 +747,13 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
           int? tagId,
           DateTime? time,
           double? temperature,
-          double? humidity,
-          double? cpuTemperature}) =>
+          double? humidity}) =>
       TagDataData(
         id: id ?? this.id,
         tagId: tagId ?? this.tagId,
         time: time ?? this.time,
         temperature: temperature ?? this.temperature,
         humidity: humidity ?? this.humidity,
-        cpuTemperature: cpuTemperature ?? this.cpuTemperature,
       );
   TagDataData copyWithCompanion(TagDataCompanion data) {
     return TagDataData(
@@ -788,9 +763,6 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
       temperature:
           data.temperature.present ? data.temperature.value : this.temperature,
       humidity: data.humidity.present ? data.humidity.value : this.humidity,
-      cpuTemperature: data.cpuTemperature.present
-          ? data.cpuTemperature.value
-          : this.cpuTemperature,
     );
   }
 
@@ -801,15 +773,13 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
           ..write('tagId: $tagId, ')
           ..write('time: $time, ')
           ..write('temperature: $temperature, ')
-          ..write('humidity: $humidity, ')
-          ..write('cpuTemperature: $cpuTemperature')
+          ..write('humidity: $humidity')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, tagId, time, temperature, humidity, cpuTemperature);
+  int get hashCode => Object.hash(id, tagId, time, temperature, humidity);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -818,8 +788,7 @@ class TagDataData extends DataClass implements Insertable<TagDataData> {
           other.tagId == this.tagId &&
           other.time == this.time &&
           other.temperature == this.temperature &&
-          other.humidity == this.humidity &&
-          other.cpuTemperature == this.cpuTemperature);
+          other.humidity == this.humidity);
 }
 
 class TagDataCompanion extends UpdateCompanion<TagDataData> {
@@ -828,14 +797,12 @@ class TagDataCompanion extends UpdateCompanion<TagDataData> {
   final Value<DateTime> time;
   final Value<double> temperature;
   final Value<double> humidity;
-  final Value<double> cpuTemperature;
   const TagDataCompanion({
     this.id = const Value.absent(),
     this.tagId = const Value.absent(),
     this.time = const Value.absent(),
     this.temperature = const Value.absent(),
     this.humidity = const Value.absent(),
-    this.cpuTemperature = const Value.absent(),
   });
   TagDataCompanion.insert({
     this.id = const Value.absent(),
@@ -843,19 +810,16 @@ class TagDataCompanion extends UpdateCompanion<TagDataData> {
     required DateTime time,
     required double temperature,
     required double humidity,
-    required double cpuTemperature,
   })  : tagId = Value(tagId),
         time = Value(time),
         temperature = Value(temperature),
-        humidity = Value(humidity),
-        cpuTemperature = Value(cpuTemperature);
+        humidity = Value(humidity);
   static Insertable<TagDataData> custom({
     Expression<int>? id,
     Expression<int>? tagId,
     Expression<DateTime>? time,
     Expression<double>? temperature,
     Expression<double>? humidity,
-    Expression<double>? cpuTemperature,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -863,7 +827,6 @@ class TagDataCompanion extends UpdateCompanion<TagDataData> {
       if (time != null) 'time': time,
       if (temperature != null) 'temperature': temperature,
       if (humidity != null) 'humidity': humidity,
-      if (cpuTemperature != null) 'cpu_temperature': cpuTemperature,
     });
   }
 
@@ -872,15 +835,13 @@ class TagDataCompanion extends UpdateCompanion<TagDataData> {
       Value<int>? tagId,
       Value<DateTime>? time,
       Value<double>? temperature,
-      Value<double>? humidity,
-      Value<double>? cpuTemperature}) {
+      Value<double>? humidity}) {
     return TagDataCompanion(
       id: id ?? this.id,
       tagId: tagId ?? this.tagId,
       time: time ?? this.time,
       temperature: temperature ?? this.temperature,
       humidity: humidity ?? this.humidity,
-      cpuTemperature: cpuTemperature ?? this.cpuTemperature,
     );
   }
 
@@ -902,9 +863,6 @@ class TagDataCompanion extends UpdateCompanion<TagDataData> {
     if (humidity.present) {
       map['humidity'] = Variable<double>(humidity.value);
     }
-    if (cpuTemperature.present) {
-      map['cpu_temperature'] = Variable<double>(cpuTemperature.value);
-    }
     return map;
   }
 
@@ -915,8 +873,7 @@ class TagDataCompanion extends UpdateCompanion<TagDataData> {
           ..write('tagId: $tagId, ')
           ..write('time: $time, ')
           ..write('temperature: $temperature, ')
-          ..write('humidity: $humidity, ')
-          ..write('cpuTemperature: $cpuTemperature')
+          ..write('humidity: $humidity')
           ..write(')'))
         .toString();
   }
@@ -1779,12 +1736,25 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MedicineDetailsTable medicineDetails =
       $MedicineDetailsTable(this);
   late final TagDao tagDao = TagDao(this as AppDatabase);
+  late final TagDataDao tagDataDao = TagDataDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
       [refrigerators, tags, tagData, medicines, medicineDetails];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
+        [
+          WritePropagation(
+            on: TableUpdateQuery.onTableName('tags',
+                limitUpdateKind: UpdateKind.delete),
+            result: [
+              TableUpdate('tag_data', kind: UpdateKind.delete),
+            ],
+          ),
+        ],
+      );
 }
 
 typedef $$RefrigeratorsTableCreateCompanionBuilder = RefrigeratorsCompanion
@@ -2508,7 +2478,6 @@ typedef $$TagDataTableCreateCompanionBuilder = TagDataCompanion Function({
   required DateTime time,
   required double temperature,
   required double humidity,
-  required double cpuTemperature,
 });
 typedef $$TagDataTableUpdateCompanionBuilder = TagDataCompanion Function({
   Value<int> id,
@@ -2516,7 +2485,6 @@ typedef $$TagDataTableUpdateCompanionBuilder = TagDataCompanion Function({
   Value<DateTime> time,
   Value<double> temperature,
   Value<double> humidity,
-  Value<double> cpuTemperature,
 });
 
 final class $$TagDataTableReferences
@@ -2558,10 +2526,6 @@ class $$TagDataTableFilterComposer
 
   ColumnFilters<double> get humidity => $composableBuilder(
       column: $table.humidity, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get cpuTemperature => $composableBuilder(
-      column: $table.cpuTemperature,
-      builder: (column) => ColumnFilters(column));
 
   $$TagsTableFilterComposer get tagId {
     final $$TagsTableFilterComposer composer = $composerBuilder(
@@ -2605,10 +2569,6 @@ class $$TagDataTableOrderingComposer
   ColumnOrderings<double> get humidity => $composableBuilder(
       column: $table.humidity, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get cpuTemperature => $composableBuilder(
-      column: $table.cpuTemperature,
-      builder: (column) => ColumnOrderings(column));
-
   $$TagsTableOrderingComposer get tagId {
     final $$TagsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -2650,9 +2610,6 @@ class $$TagDataTableAnnotationComposer
 
   GeneratedColumn<double> get humidity =>
       $composableBuilder(column: $table.humidity, builder: (column) => column);
-
-  GeneratedColumn<double> get cpuTemperature => $composableBuilder(
-      column: $table.cpuTemperature, builder: (column) => column);
 
   $$TagsTableAnnotationComposer get tagId {
     final $$TagsTableAnnotationComposer composer = $composerBuilder(
@@ -2703,7 +2660,6 @@ class $$TagDataTableTableManager extends RootTableManager<
             Value<DateTime> time = const Value.absent(),
             Value<double> temperature = const Value.absent(),
             Value<double> humidity = const Value.absent(),
-            Value<double> cpuTemperature = const Value.absent(),
           }) =>
               TagDataCompanion(
             id: id,
@@ -2711,7 +2667,6 @@ class $$TagDataTableTableManager extends RootTableManager<
             time: time,
             temperature: temperature,
             humidity: humidity,
-            cpuTemperature: cpuTemperature,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -2719,7 +2674,6 @@ class $$TagDataTableTableManager extends RootTableManager<
             required DateTime time,
             required double temperature,
             required double humidity,
-            required double cpuTemperature,
           }) =>
               TagDataCompanion.insert(
             id: id,
@@ -2727,7 +2681,6 @@ class $$TagDataTableTableManager extends RootTableManager<
             time: time,
             temperature: temperature,
             humidity: humidity,
-            cpuTemperature: cpuTemperature,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) =>

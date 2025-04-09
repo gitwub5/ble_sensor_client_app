@@ -13,12 +13,13 @@ import 'tables/medicine_details.dart';
 
 // DAO 불러오기
 import 'daos/tag_dao.dart';
+import 'daos/tag_data_dao.dart';
 
 part 'database.g.dart';
 
 @DriftDatabase(
   tables: [Tags, TagData, Refrigerators, Medicines, MedicineDetails],
-  daos: [TagDao],
+  daos: [TagDao, TagDataDao],
 )
 class AppDatabase extends _$AppDatabase {
   // 싱글턴 패턴 적용 (중복 생성 방지)
@@ -55,4 +56,17 @@ LazyDatabase _openConnection() {
     final file = File(p.join(dbFolder.path, 'app_database.sqlite'));
     return NativeDatabase(file);
   });
+}
+
+Future<void> deleteDatabaseFile() async {
+  final dbFolder = await getApplicationDocumentsDirectory();
+  final filePath = p.join(dbFolder.path, 'app_database.sqlite');
+  final file = File(filePath);
+
+  if (await file.exists()) {
+    await file.delete();
+    print("🗑 데이터베이스 파일이 삭제되었습니다.");
+  } else {
+    print("❌ 데이터베이스 파일이 존재하지 않습니다.");
+  }
 }
