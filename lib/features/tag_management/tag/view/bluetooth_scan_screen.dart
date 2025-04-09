@@ -1,15 +1,40 @@
-import 'package:bluetooth_app/features/tag_management/view/tag_registration_screen.dart';
+import 'package:bluetooth_app/core/database/database.dart';
+import 'package:bluetooth_app/features/tag_management/tag/view/tag_registration_screen.dart';
+import 'package:bluetooth_app/shared/widgets/custom_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/tag_viewmodel.dart';
 
-class BluetoothScanScreen extends StatelessWidget {
+class BluetoothScanScreen extends StatefulWidget {
+  @override
+  _BluetoothScanScreenState createState() => _BluetoothScanScreenState();
+}
+
+class _BluetoothScanScreenState extends State<BluetoothScanScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 페이지가 열리면 자동으로 검색을 시작한다.
+    Future.microtask(
+        () => Provider.of<TagViewModel>(context, listen: false).startScan(
+              Duration(seconds: 5),
+            ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final tagViewModel = Provider.of<TagViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text("블루투스 기기 탐색")),
+      appBar: CustomAppBar(
+        title: "기기 검색",
+        leftButton: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
       body: Container(
         alignment: Alignment.center,
         child: Column(
@@ -17,23 +42,23 @@ class BluetoothScanScreen extends StatelessWidget {
           children: [
             Icon(Icons.bluetooth_searching, size: 80, color: Colors.blue),
             SizedBox(height: 20),
-            Text("블루투스 기기를 검색하세요", style: TextStyle(fontSize: 18)),
-            SizedBox(height: 20),
 
             /// 검색 시작 버튼 (리스트 위로 이동)
             ElevatedButton(
-              onPressed:
-                  tagViewModel.isScanning ? null : tagViewModel.startScan,
+              onPressed: tagViewModel.isScanning
+                  ? null
+                  : () => tagViewModel.startScan(
+                        Duration(seconds: 5),
+                      ),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     tagViewModel.isScanning ? Colors.grey : Colors.blue,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               ),
-              child: Text(tagViewModel.isScanning ? "검색 중..." : "검색 시작"),
+              child: Text(tagViewModel.isScanning ? "검색 중..." : "재검색"),
             ),
-
-            SizedBox(height: 20),
+            SizedBox(height: 25),
 
             /// 검색 중이면 로딩 아이콘 표시
             if (tagViewModel.isScanning)
@@ -51,29 +76,45 @@ class BluetoothScanScreen extends StatelessWidget {
                   itemCount: tagViewModel.scanResults.length,
                   itemBuilder: (context, index) {
                     final device = tagViewModel.scanResults[index].device;
+                    final existingTag =
+                        tagViewModel.tags.cast<Tag?>().firstWhere(
+                              (tag) =>
+                                  tag?.remoteId == device.remoteId.toString(),
+                              orElse: () => null,
+                            );
+
                     return ListTile(
-                      title: Text(device.platformName.isNotEmpty
-                          ? device.platformName
-                          : "Unknown Device"),
+                      title: Text(
+                        existingTag?.name ??
+                            (device.platformName.isNotEmpty
+                                ? device.platformName
+                                : "Unknown Device"),
+                      ),
                       subtitle: Text(device.remoteId.toString()),
                       trailing: ElevatedButton(
                         onPressed: () async {
-                          bool success =
-                              await tagViewModel.connectToDevice(device);
+                          bool success = await tagViewModel.connectToDevice(
+                              device.remoteId.toString(),
+                              autoConnect: false);
                           if (success) {
-                            // ✅ 연결 완료 후 '기기 등록 페이지'로 이동
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => TagRegistrationScreen(
-                                  deviceName: device.platformName,
+                                  deviceName:
+                                      existingTag?.name ?? device.platformName,
                                   remoteId: device.remoteId.toString(),
                                 ),
                               ),
                             );
                           }
                         },
-                        child: Text("연결"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              existingTag != null ? Colors.orange : Colors.blue,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(existingTag != null ? "재설정" : "연결"),
                       ),
                     );
                   },

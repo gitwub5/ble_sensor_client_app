@@ -1,12 +1,14 @@
-import 'package:bluetooth_app/core/bluetooth/bluetooth_manager.dart';
-import 'package:bluetooth_app/core/database/database.dart';
-import 'package:bluetooth_app/features/tag_management/repository/tag_repository.dart';
-import 'package:bluetooth_app/test/ble/viewmodel/test_viewmodel.dart';
+import 'app.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'app.dart';
+import 'package:bluetooth_app/core/bluetooth/bluetooth_manager.dart';
+import 'package:bluetooth_app/core/database/database.dart';
 import 'package:bluetooth_app/features/home/viewmodel/home_viewmodel.dart';
-import 'features/tag_management/viewmodel/tag_viewmodel.dart';
+import 'package:bluetooth_app/features/tag_management/tag/viewmodel/tag_viewmodel.dart';
+import 'package:bluetooth_app/features/tag_management/tag_data/viewmodel/tag_data_viewmodel.dart';
+import 'package:bluetooth_app/features/tag_management/tag_data/repository/tag_data_repository.dart';
+import 'package:bluetooth_app/features/tag_management/tag/repository/tag_repository.dart';
+import 'package:bluetooth_app/test/ble/viewmodel/test_viewmodel.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 비동기 초기화
@@ -17,6 +19,7 @@ Future<void> main() async {
 
   final database = AppDatabase(); // Drift 싱글턴 인스턴스
   final tagRepository = TagRepository(database); // Repository에 DB 주입
+  final tagDataRepository = TagDataRepository(database);
 
   runApp(
     MultiProvider(
@@ -24,6 +27,7 @@ Future<void> main() async {
         Provider(create: (_) => bluetoothManager), // BluetoothManager 주입
         Provider(create: (_) => database), // Database 주입
         Provider(create: (_) => tagRepository), // Repository 주입
+        Provider(create: (_) => tagDataRepository),
         ChangeNotifierProvider(
             create: (context) =>
                 HomeViewModel(context.read<BluetoothManager>())),
@@ -31,7 +35,14 @@ Future<void> main() async {
             create: (context) => TagViewModel(
                   context.read<BluetoothManager>(),
                   context.read<TagRepository>(),
+                  context.read<TagDataRepository>(),
+                  context.read<HomeViewModel>(),
                 )),
+        ChangeNotifierProvider(
+          create: (context) =>
+              TagDataViewModel(context.read<TagDataRepository>()),
+          // TagDataViewModel 주입
+        ),
         ChangeNotifierProvider(
             create: (context) =>
                 BleTestViewModel(context.read<BluetoothManager>())),
