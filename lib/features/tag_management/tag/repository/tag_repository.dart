@@ -10,8 +10,8 @@ class TagRepository {
     return await _database.tagDao.getAllTags();
   }
 
-  /// ✅ 태그 추가 (기존 태그가 있으면 업데이트)
-  Future<void> addOrUpdateTag(
+  /// 태그 추가 (기존 태그가 있으면 업데이트)
+  Future<void> InsertOrUpdateTag(
       String remoteId, String name, Duration period, DateTime updatedAt) async {
     final existingTag = await _database.tagDao.getTagByRemoteId(remoteId);
 
@@ -23,10 +23,10 @@ class TagRepository {
     );
 
     if (existingTag == null) {
-      // ❇️ 새 태그 등록
+      // 새 태그 등록
       await _database.tagDao.insertTag(tagCompanion);
     } else {
-      // ❇️ 기존 태그 업데이트
+      // 기존 태그 업데이트
       final updatedTag = existingTag.copyWith(
         name: name,
         sensorPeriod: period.inSeconds,
