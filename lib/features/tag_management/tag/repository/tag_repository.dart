@@ -36,6 +36,16 @@ class TagRepository {
     }
   }
 
+  Future<void> updateLastConnectedAt(String remoteId) async {
+    final tag = await _database.tagDao.getTagByRemoteId(remoteId);
+    if (tag != null) {
+      final updatedTag = tag.copyWith(
+        updatedAt: DateTime.now(),
+      );
+      await _database.tagDao.updateTag(updatedTag);
+    }
+  }
+
   Future<void> deleteTag(int id) async {
     await _database.tagDao.deleteTag(id);
   }
