@@ -31,10 +31,13 @@ class _TagWidgetState extends State<TagWidget> {
   String _formattedTime = "";
   bool _isAdvertising = false;
   bool _isConnecting = false;
+  TagDataData? _latestData;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _fetchLatestData();
     _updateRemainingTime();
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       _updateRemainingTime();
@@ -47,7 +50,6 @@ class _TagWidgetState extends State<TagWidget> {
     super.dispose();
   }
 
-  // TODO: 정확한 시간 계산은 아님.
   void _updateRemainingTime() {
     final DateTime now = DateTime.now();
     final Duration elapsed = now.difference(widget.tag.updatedAt);
@@ -109,6 +111,14 @@ class _TagWidgetState extends State<TagWidget> {
     );
   }
 
+  Future<void> _fetchLatestData() async {
+    final data = await widget.tagViewModel.getLatestTagData(widget.tag.id);
+    setState(() {
+      _latestData = data;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
@@ -134,15 +144,25 @@ class _TagWidgetState extends State<TagWidget> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.thermostat, color: Colors.black54),
-                          SizedBox(width: 8),
-                          Text(
-                            "${widget.tag.name} (${widget.tag.remoteId})",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
+                          SizedBox(width: 4),
+                          Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${widget.tag.name} (${widget.tag.remoteId})",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                Text(
+                                  "마지막 통신: ${formattedUpdatedAt(widget.tag.updatedAt)}",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ]),
                         ],
                       ),
                       PopupMenuButton<String>(
@@ -178,31 +198,51 @@ class _TagWidgetState extends State<TagWidget> {
                             Text(
                                 "센서 주기: ${formattedSensorPeriod(widget.tag.sensorPeriod)}"),
                             Text(
-                                "마지막 통신 일자: ${formattedUpdatedAt(widget.tag.updatedAt)}"),
-                            Text(
                                 "냉장고: ${widget.tag.refrigeratorId ?? 'Unknown'}"),
                           ],
                         ),
                       ),
-                      SizedBox(width: 16),
-                      Container(
-                        width: 60,
-                        height: 60,
-                        decoration: BoxDecoration(
-                          color:
-                              _isAdvertising ? Colors.red : Colors.blueAccent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Center(
-                          child: Text(
-                            _formattedTime,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                      SizedBox(width: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _isLoading
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.blueAccent,
+                                  ),
+                                )
+                              : Row(
+                                  children: [
+                                    Icon(Icons.thermostat, color: Colors.red),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      _latestData != null
+                                          ? "${_latestData!.temperature.toStringAsFixed(1)}°"
+                                          : "N/A",
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Icon(Icons.water_drop, color: Colors.blue),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      _latestData != null
+                                          ? "${_latestData!.humidity.toStringAsFixed(1)}%"
+                                          : "N/A",
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ],
                       ),
                     ],
                   ),
@@ -218,6 +258,27 @@ class _TagWidgetState extends State<TagWidget> {
 
                       return Row(
                         children: [
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: _isAdvertising
+                                  ? Colors.red
+                                  : Colors.blueAccent,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Center(
+                              child: Text(
+                                _formattedTime,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 10),
                           if (isConnected) ...[
                             Expanded(
                               child: ElevatedButton(

@@ -9,7 +9,7 @@ class TagDataDao extends DatabaseAccessor<AppDatabase> with _$TagDataDaoMixin {
   TagDataDao(AppDatabase db) : super(db);
 
   /// 📌 특정 TagId로 데이터 조회 (최근 데이터를 기준으로 정렬)
-  Future<List<TagDataData>> getTagDataByTagId(int tagId) {
+  Future<List<TagDataData>> getTagData(int tagId) {
     return (select(tagData)
           ..where((tbl) => tbl.tagId.equals(tagId))
           ..orderBy([
@@ -19,7 +19,7 @@ class TagDataDao extends DatabaseAccessor<AppDatabase> with _$TagDataDaoMixin {
   }
 
   /// 📌 특정 TagId로 최근 데이터 기준으로 한 개 조회
-  Future<TagDataData?> getLatestTagDataByTagId(int tagId) {
+  Future<TagDataData?> getLatestTagData(int tagId) {
     return (select(tagData)
           ..where((tbl) => tbl.tagId.equals(tagId))
           ..orderBy([
@@ -30,7 +30,7 @@ class TagDataDao extends DatabaseAccessor<AppDatabase> with _$TagDataDaoMixin {
   }
 
   /// 📌 특정 TagId로 데이터 삭제
-  Future<int> deleteTagDataByTagId(int tagId) {
+  Future<int> deleteTagData(int tagId) {
     return (delete(tagData)..where((tbl) => tbl.tagId.equals(tagId))).go();
   }
 

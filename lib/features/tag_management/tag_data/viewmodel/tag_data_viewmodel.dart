@@ -16,7 +16,7 @@ class TagDataViewModel extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _tagDataList = await _tagDataRepository.getTagDataByTagId(tagId);
+    _tagDataList = await _tagDataRepository.getTagData(tagId);
 
     _isLoading = false;
     notifyListeners();
