@@ -9,9 +9,11 @@ import 'package:bluetooth_app/features/tag_management/tag_data/viewmodel/tag_dat
 import 'package:bluetooth_app/features/tag_management/tag_data/repository/tag_data_repository.dart';
 import 'package:bluetooth_app/features/tag_management/tag/repository/tag_repository.dart';
 import 'package:bluetooth_app/test/ble/viewmodel/test_viewmodel.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized(); // 비동기 초기화
+  await initializeDateFormatting('ko', null);
 
   //  BluetoothManager 싱글턴 인스턴스 생성
   final bluetoothManager = BluetoothManager();
