@@ -78,8 +78,12 @@ class TagViewModel extends ChangeNotifier {
     await loadTags();
   }
 
-  Future<Future<TagDataData?>> getLatestTagData(int tagId) async {
-    return _tagDataRepository.getLatestTagDataByTagId(tagId);
+  Future<TagDataData?> getLatestTagData(int tagId) async {
+    return await _tagDataRepository.getLatestTagData(tagId);
+  }
+
+  Future<void> updateLastConnectedAt(String remoteId) async {
+    await _tagRepository.updateLastConnectedAt(remoteId);
   }
 
   Future<void> startScan(
@@ -135,7 +139,7 @@ class TagViewModel extends ChangeNotifier {
       }
 
       homeViewModel.requestSnackbar(
-        message: '$remoteId 연결',
+        message: '$remoteId 연결됨',
         backgroundColor: Colors.green,
         textColor: Colors.white,
       );
@@ -165,6 +169,15 @@ class TagViewModel extends ChangeNotifier {
   Future<void> disconnectDevice(String remoteId) async {
     try {
       await _bluetoothManager.connectionService.disconnectDevice(remoteId);
+
+      homeViewModel.requestSnackbar(
+        message: '$remoteId 연결 해제됨',
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+
+      updateLastConnectedAt(remoteId);
+
       _connectedDevices.remove(remoteId);
 
       _dataStreamSubscriptions[remoteId]?.cancel();
